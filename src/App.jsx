@@ -10,15 +10,14 @@ import ViewEDriver from './views/DriverPortal';
 import LoginView from './views/LoginView';
 import medicalLogo from './assets/ArogyaFlow Medical Logo Gradient.jpg';
 
-// Slim dark nav bar for the driver's full-screen map view
+// Slim light nav bar for the driver's full-screen map view (matches AppShell color scheme)
 function DriverNav() {
   const { user, logout } = useContext(AuthContext);
   return (
     <nav style={{
-      background: 'rgba(15,23,42,0.95)',
-      backdropFilter: 'blur(12px)',
-      borderBottom: '1px solid rgba(255,255,255,0.08)',
-      height: 52,
+      background: '#1A365D',
+      borderBottom: '1px solid rgba(255,255,255,0.12)',
+      height: 56,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -26,26 +25,29 @@ function DriverNav() {
       flexShrink: 0,
       zIndex: 100
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <img src={medicalLogo} alt="logo" style={{ width: 32, height: 32, objectFit: 'contain' }} />
-        <span style={{ color: '#f1f5f9', fontWeight: 800, fontSize: 14 }}>ArogyaFlow</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <img src={medicalLogo} alt="logo" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 6 }} />
+        <span style={{ color: '#FFFFFF', fontWeight: 800, fontSize: 16, tracking: 'tight' }}>ArogyaFlow</span>
         <span style={{
-          marginLeft: 6, background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.3)',
-          color: '#93c5fd', fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
-          letterSpacing: 1, padding: '2px 7px', borderRadius: 6
+          marginLeft: 6, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)',
+          color: '#FFFFFF', fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
+          letterSpacing: 1.2, padding: '2px 8px', borderRadius: 6
         }}>Driver</span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {user?.name && (
-          <span style={{ color: '#94a3b8', fontSize: 11 }}>{user.name}</span>
+          <span style={{ color: '#E2E8F0', fontSize: 12, fontWeight: 600 }}>{user.name}</span>
         )}
         <button
           onClick={logout}
           style={{
-            background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
-            color: '#94a3b8', borderRadius: 8, padding: '5px 10px',
-            fontSize: 11, cursor: 'pointer', fontWeight: 600
+            background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
+            color: '#FFFFFF', borderRadius: 8, padding: '6px 12px',
+            fontSize: 11, cursor: 'pointer', fontWeight: 700,
+            transition: 'all 0.2s'
           }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
         >
           Logout
         </button>

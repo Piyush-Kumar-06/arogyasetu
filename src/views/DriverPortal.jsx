@@ -207,11 +207,11 @@ export default function ViewEDriver() {
   const renderHospitalPickerContent = () => {
     return (
       <div>
-        <div style={{ color: '#f1f5f9', fontWeight: 800, fontSize: 16, marginBottom: 4 }}>🏥 Select Nearest Hospital</div>
-        <div style={{ color: '#64748b', fontSize: 11, marginBottom: 16 }}>Real hospitals near patient's location (OpenStreetMap)</div>
+        <div style={{ color: '#1A365D', fontWeight: 800, fontSize: 16, marginBottom: 4 }}>🏥 Select Nearest Hospital</div>
+        <div style={{ color: '#4A5568', fontSize: 11, marginBottom: 16 }}>Real hospitals near patient's location (OpenStreetMap)</div>
 
         {nearbyHospitals.length === 0 ? (
-          <div style={{ color: '#64748b', textAlign: 'center', padding: '24px 0', fontSize: 12 }}>
+          <div style={{ color: '#4A5568', textAlign: 'center', padding: '24px 0', fontSize: 12 }}>
             No hospitals found nearby. Proceeding with default.
           </div>
         ) : nearbyHospitals.map((h, i) => {
@@ -226,25 +226,25 @@ export default function ViewEDriver() {
               style={{
                 width: '100%', marginBottom: 10, padding: '12px 14px',
                 borderRadius: 12, textAlign: 'left', cursor: 'pointer',
-                background: i === 0 ? 'rgba(5,150,105,0.15)' : 'rgba(255,255,255,0.04)',
-                border: `1.5px solid ${i === 0 ? 'rgba(5,150,105,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                background: i === 0 ? '#E6FFFA' : '#FFFFFF',
+                border: `1.5px solid ${i === 0 ? '#81E6D9' : '#E2E8F0'}`,
                 transition: 'all 0.2s',
-                color: '#fff'
+                color: '#2D3748'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                   <span style={{ fontSize: 20, flexShrink: 0 }}>🏥</span>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 13, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{h.name}</div>
-                    <div style={{ color: '#64748b', fontSize: 10, marginTop: 2, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    <div style={{ color: '#1A365D', fontWeight: 700, fontSize: 13, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{h.name}</div>
+                    <div style={{ color: '#718096', fontSize: 10, marginTop: 2, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                       {h.emergency ? '🚨 Emergency Unit · ' : ''}{h.type}
                     </div>
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ color: i === 0 ? '#4ade80' : '#94a3b8', fontWeight: 700, fontSize: 13 }}>{distKm} km</div>
-                  {i === 0 && <div style={{ color: '#4ade80', fontSize: 9, fontWeight: 700 }}>NEAREST</div>}
+                  <div style={{ color: i === 0 ? '#319795' : '#4A5568', fontWeight: 700, fontSize: 13 }}>{distKm} km</div>
+                  {i === 0 && <div style={{ color: '#319795', fontSize: 9, fontWeight: 700 }}>NEAREST</div>}
                 </div>
               </div>
             </button>
@@ -255,8 +255,8 @@ export default function ViewEDriver() {
           onClick={() => setShowHospitalPicker(false)}
           style={{
             width: '100%', marginTop: 6, padding: '12px 0', borderRadius: 12,
-            background: 'rgba(220,38,38,0.12)', border: '1px solid rgba(220,38,38,0.3)',
-            color: '#fca5a5', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            background: '#FFF5F5', border: '1px solid #FEB2B2',
+            color: '#E53E3E', fontSize: 12, fontWeight: 700, cursor: 'pointer',
             transition: 'all 0.2s'
           }}
         >Cancel</button>
@@ -274,23 +274,23 @@ export default function ViewEDriver() {
         <div style={{ textAlign: 'center', padding: '12px 0' }}>
           <div style={{
             width: 72, height: 72, borderRadius: '50%',
-            background: 'linear-gradient(135deg,#1e3a5f,#1d4ed8)',
+            background: 'linear-gradient(135deg,#EBF8FF,#BEE3F8)',
             margin: '0 auto 16px',
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32,
-            boxShadow: '0 4px 14px rgba(29,78,216,0.3)'
+            boxShadow: '0 4px 14px rgba(66,153,225,0.2)'
           }}>🚑</div>
-          <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>
+          <div style={{ color: '#1A365D', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>
             {user?.name || user?.email?.split('@')[0] || 'Emergency Driver'}
           </div>
-          <div style={{ color: '#64748b', fontSize: 13, marginBottom: 20 }}>
+          <div style={{ color: '#4A5568', fontSize: 13, marginBottom: 20 }}>
             Active Unit ID: {user?.id ? `ALS-${user.id.substring(0, 4).toUpperCase()}` : 'ALS-9876'}
           </div>
           <div style={{
-            background: 'rgba(34,197,94,0.08)', border: '1.5px solid rgba(34,197,94,0.25)',
-            borderRadius: 12, padding: '12px 16px', color: '#4ade80', fontSize: 13, fontWeight: 600,
+            background: '#E6FFFA', border: '1.5px solid #319795',
+            borderRadius: 12, padding: '12px 16px', color: '#234E52', fontSize: 13, fontWeight: 600,
             display: 'inline-flex', alignItems: 'center', gap: 8
           }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#319795', boxShadow: '0 0 6px #319795' }} />
             On Duty · Standby for dispatch
           </div>
         </div>
@@ -301,16 +301,16 @@ export default function ViewEDriver() {
       return (
         <div>
           <div style={{
-            background: 'linear-gradient(135deg,rgba(220,38,38,0.15),rgba(239,68,68,0.05))',
-            border: '1px solid rgba(239,68,68,0.35)',
+            background: 'linear-gradient(135deg,#FFF5F5,#FED7D7)',
+            border: '1px solid #FEB2B2',
             borderRadius: 14, padding: 16, marginBottom: 16,
             animation: 'slide-up 0.3s ease'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <span style={{ fontSize: 24, animation: 'pulse-dot 1s infinite' }}>🚨</span>
               <div>
-                <div style={{ color: '#fca5a5', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 700 }}>Dispatch Broadcast</div>
-                <div style={{ color: '#fff', fontWeight: 800, fontSize: 17 }}>NEW SOS DISPATCH</div>
+                <div style={{ color: '#C53030', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 700 }}>Dispatch Broadcast</div>
+                <div style={{ color: '#9B2C2C', fontWeight: 800, fontSize: 17 }}>NEW SOS DISPATCH</div>
               </div>
             </div>
 
@@ -322,9 +322,9 @@ export default function ViewEDriver() {
             </div>
 
             {sosLocation && (
-              <div style={{ marginTop: 12, padding: '10px 12px', background: 'rgba(0,0,0,0.25)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ color: '#94a3b8', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Pickup Location</div>
-                <div style={{ color: '#cbd5e1', fontSize: 12, fontWeight: 500 }}>📍 {sosLocation}</div>
+              <div style={{ marginTop: 12, padding: '10px 12px', background: '#FFFFFF', borderRadius: 10, border: '1px solid #E2E8F0' }}>
+                <div style={{ color: '#718096', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Pickup Location</div>
+                <div style={{ color: '#2D3748', fontSize: 12, fontWeight: 500 }}>📍 {sosLocation}</div>
               </div>
             )}
           </div>
@@ -337,9 +337,9 @@ export default function ViewEDriver() {
                 style={{
                   flex: 1, padding: '10px 0', borderRadius: 10, fontSize: 11, fontWeight: 700,
                   textTransform: 'uppercase', letterSpacing: 1, cursor: 'pointer',
-                  border: gpsMode === mode ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.08)',
-                  background: gpsMode === mode ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)',
-                  color: gpsMode === mode ? '#93c5fd' : '#64748b',
+                  border: gpsMode === mode ? '1.5px solid #2B6CB0' : '1.5px solid #E2E8F0',
+                  background: gpsMode === mode ? '#EBF8FF' : '#FFFFFF',
+                  color: gpsMode === mode ? '#2B6CB0' : '#4A5568',
                   transition: 'all 0.2s'
                 }}
               >
@@ -353,15 +353,15 @@ export default function ViewEDriver() {
             style={{
               width: '100%', padding: '16px 0', borderRadius: 12, fontSize: 14,
               fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5,
-              background: 'linear-gradient(135deg,#dc2626,#b91c1c)',
+              background: 'linear-gradient(135deg,#E53E3E,#C53030)',
               color: '#fff', border: 'none', cursor: 'pointer',
-              boxShadow: '0 6px 20px rgba(220,38,38,0.4)',
+              boxShadow: '0 6px 20px rgba(229,62,62,0.3)',
               transition: 'all 0.1s'
             }}
             onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
             onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
           >
-            ✅ Accept Ride
+            ✅ Accept Emergency
           </button>
         </div>
       );
@@ -371,25 +371,25 @@ export default function ViewEDriver() {
       return (
         <div>
           <div style={{
-            background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.25)',
+            background: '#E6FFFA', border: '1px solid #81E6D9',
             borderRadius: 14, padding: 16, marginBottom: 16
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <span style={{ fontSize: 24, animation: 'pulse-dot 1.5s infinite' }}>🚑</span>
               <div>
-                <div style={{ color: '#6ee7b7', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 700 }}>Dispatch Active</div>
-                <div style={{ color: '#fff', fontWeight: 800, fontSize: 16 }}>En Route to Patient</div>
+                <div style={{ color: '#234E52', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 700 }}>Dispatch Active</div>
+                <div style={{ color: '#1A365D', fontWeight: 800, fontSize: 16 }}>En Route to Patient</div>
               </div>
               <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                <div style={{ color: '#6ee7b7', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Progress</div>
-                <div style={{ color: '#22c55e', fontWeight: 800, fontSize: 18, fontFamily: 'monospace' }}>{progress}%</div>
+                <div style={{ color: '#234E52', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Progress</div>
+                <div style={{ color: '#2F855A', fontWeight: 800, fontSize: 18, fontFamily: 'monospace' }}>{progress}%</div>
               </div>
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 4, height: 6, overflow: 'hidden', marginBottom: 14 }}>
+            <div style={{ background: '#CBD5E0', borderRadius: 4, height: 6, overflow: 'hidden', marginBottom: 14 }}>
               <div style={{
                 width: `${progress}%`, height: '100%', borderRadius: 4,
-                background: 'linear-gradient(90deg,#22c55e,#16a34a)',
+                background: 'linear-gradient(90deg,#319795,#234E52)',
                 transition: 'width 0.2s'
               }} />
             </div>
@@ -401,7 +401,7 @@ export default function ViewEDriver() {
           </div>
 
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#94a3b8', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, fontWeight: 700 }}>Route Instructions</div>
+            <div style={{ color: '#4A5568', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, fontWeight: 700 }}>Route Instructions</div>
             {[
               { step: '1', txt: 'Exit depot, turn left on main avenue', at: 10 },
               { step: '2', txt: 'Continue past central traffic circle', at: 60 },
@@ -409,19 +409,19 @@ export default function ViewEDriver() {
             ].map(({ step, txt, at }) => (
               <div key={step} style={{
                 display: 'flex', gap: 12, alignItems: 'center',
-                padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
-                opacity: gpsMode === 'simulated' && progress >= at ? 0.35 : 1,
+                padding: '10px 0', borderBottom: '1px solid #E2E8F0',
+                opacity: gpsMode === 'simulated' && progress >= at ? 0.45 : 1,
                 transition: 'opacity 0.2s'
               }}>
                 <div style={{
                   width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-                  background: gpsMode === 'simulated' && progress >= at ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.15)',
+                  background: gpsMode === 'simulated' && progress >= at ? '#E6FFFA' : '#EBF8FF',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: gpsMode === 'simulated' && progress >= at ? '#22c55e' : '#93c5fd',
-                  fontSize: 10, fontWeight: 800, border: `1px solid ${gpsMode === 'simulated' && progress >= at ? 'rgba(34,197,94,0.3)' : 'rgba(59,130,246,0.3)'}`
+                  color: gpsMode === 'simulated' && progress >= at ? '#319795' : '#2B6CB0',
+                  fontSize: 10, fontWeight: 800, border: `1px solid ${gpsMode === 'simulated' && progress >= at ? '#81E6D9' : '#BEE3F8'}`
                 }}>{gpsMode === 'simulated' && progress >= at ? '✓' : step}</div>
                 <span style={{
-                  color: gpsMode === 'simulated' && progress >= at ? '#475569' : '#e2e8f0',
+                  color: gpsMode === 'simulated' && progress >= at ? '#A0AEC0' : '#2D3748',
                   fontSize: 12,
                   textDecoration: gpsMode === 'simulated' && progress >= at ? 'line-through' : 'none',
                   fontWeight: 500
@@ -435,9 +435,9 @@ export default function ViewEDriver() {
               <button key={mode} onClick={() => setGpsMode(mode)} style={{
                 flex: 1, padding: '9px 0', borderRadius: 10, fontSize: 10, fontWeight: 700,
                 textTransform: 'uppercase', letterSpacing: 1, cursor: 'pointer',
-                border: gpsMode === mode ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.08)',
-                background: gpsMode === mode ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)',
-                color: gpsMode === mode ? '#93c5fd' : '#64748b',
+                border: gpsMode === mode ? '1.5px solid #2B6CB0' : '1.5px solid #E2E8F0',
+                background: gpsMode === mode ? '#EBF8FF' : '#FFFFFF',
+                color: gpsMode === mode ? '#2B6CB0' : '#4A5568',
                 transition: 'all 0.2s'
               }}>
                 {mode === 'simulated' ? '⏱ Simulated' : '🛰 Real GPS'}
@@ -452,12 +452,12 @@ export default function ViewEDriver() {
               width: '100%', padding: '15px 0', borderRadius: 12, fontSize: 13,
               fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.2,
               background: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals
-                ? 'linear-gradient(135deg,#059669,#047857)'
-                : 'rgba(255,255,255,0.05)',
-              color: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals ? '#fff' : '#475569',
+                ? 'linear-gradient(135deg,#319795,#234E52)'
+                : '#EDF2F7',
+              color: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals ? '#fff' : '#A0AEC0',
               border: 'none',
               cursor: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals ? 'pointer' : 'not-allowed',
-              boxShadow: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals ? '0 5px 15px rgba(5,150,105,0.35)' : 'none',
+              boxShadow: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals ? '0 5px 15px rgba(49,151,149,0.2)' : 'none',
               transition: 'all 0.2s'
             }}
           >
@@ -473,25 +473,25 @@ export default function ViewEDriver() {
       return (
         <div>
           <div style={{
-            background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.25)',
+            background: '#EBF8FF', border: '1px solid #90CDF4',
             borderRadius: 14, padding: 16, marginBottom: 16
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <span style={{ fontSize: 24, animation: 'pulse-dot 1.5s infinite' }}>🏥</span>
               <div>
-                <div style={{ color: '#93c5fd', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 700 }}>Emergency Transit</div>
-                <div style={{ color: '#fff', fontWeight: 800, fontSize: 16 }}>Transport to Hospital</div>
+                <div style={{ color: '#2B6CB0', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 700 }}>Emergency Transit</div>
+                <div style={{ color: '#1A365D', fontWeight: 800, fontSize: 16 }}>Transport to Hospital</div>
               </div>
               <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                <div style={{ color: '#93c5fd', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Progress</div>
-                <div style={{ color: '#60a5fa', fontWeight: 800, fontSize: 18, fontFamily: 'monospace' }}>{progress}%</div>
+                <div style={{ color: '#2B6CB0', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Progress</div>
+                <div style={{ color: '#2B6CB0', fontWeight: 800, fontSize: 18, fontFamily: 'monospace' }}>{progress}%</div>
               </div>
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 4, height: 6, overflow: 'hidden', marginBottom: 14 }}>
+            <div style={{ background: '#CBD5E0', borderRadius: 4, height: 6, overflow: 'hidden', marginBottom: 14 }}>
               <div style={{
                 width: `${progress}%`, height: '100%', borderRadius: 4,
-                background: 'linear-gradient(90deg,#3b82f6,#1d4ed8)',
+                background: 'linear-gradient(90deg,#3182CE,#1A365D)',
                 transition: 'width 0.2s'
               }} />
             </div>
@@ -503,7 +503,7 @@ export default function ViewEDriver() {
           </div>
 
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#94a3b8', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, fontWeight: 700 }}>Route Instructions</div>
+            <div style={{ color: '#4A5568', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, fontWeight: 700 }}>Route Instructions</div>
             {[
               { step: '1', txt: 'Head east on patient local access road', at: 20 },
               { step: '2', txt: 'Merge onto high-speed expressway lanes', at: 70 },
@@ -511,19 +511,19 @@ export default function ViewEDriver() {
             ].map(({ step, txt, at }) => (
               <div key={step} style={{
                 display: 'flex', gap: 12, alignItems: 'center',
-                padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
-                opacity: gpsMode === 'simulated' && progress >= at ? 0.35 : 1,
+                padding: '10px 0', borderBottom: '1px solid #E2E8F0',
+                opacity: gpsMode === 'simulated' && progress >= at ? 0.45 : 1,
                 transition: 'opacity 0.2s'
               }}>
                 <div style={{
                   width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-                  background: gpsMode === 'simulated' && progress >= at ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.15)',
+                  background: gpsMode === 'simulated' && progress >= at ? '#EBF8FF' : '#EBF8FF',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: gpsMode === 'simulated' && progress >= at ? '#3b82f6' : '#93c5fd',
-                  fontSize: 10, fontWeight: 800, border: `1px solid ${gpsMode === 'simulated' && progress >= at ? 'rgba(59,130,246,0.3)' : 'rgba(59,130,246,0.3)'}`
+                  color: gpsMode === 'simulated' && progress >= at ? '#2B6CB0' : '#2B6CB0',
+                  fontSize: 10, fontWeight: 800, border: `1px solid ${gpsMode === 'simulated' && progress >= at ? '#90CDF4' : '#90CDF4'}`
                 }}>{gpsMode === 'simulated' && progress >= at ? '✓' : step}</div>
                 <span style={{
-                  color: gpsMode === 'simulated' && progress >= at ? '#475569' : '#e2e8f0',
+                  color: gpsMode === 'simulated' && progress >= at ? '#A0AEC0' : '#2D3748',
                   fontSize: 12,
                   textDecoration: gpsMode === 'simulated' && progress >= at ? 'line-through' : 'none',
                   fontWeight: 500
@@ -537,9 +537,9 @@ export default function ViewEDriver() {
               <button key={mode} onClick={() => setGpsMode(mode)} style={{
                 flex: 1, padding: '9px 0', borderRadius: 10, fontSize: 10, fontWeight: 700,
                 textTransform: 'uppercase', letterSpacing: 1, cursor: 'pointer',
-                border: gpsMode === mode ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.08)',
-                background: gpsMode === mode ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)',
-                color: gpsMode === mode ? '#93c5fd' : '#64748b',
+                border: gpsMode === mode ? '1.5px solid #2B6CB0' : '1.5px solid #E2E8F0',
+                background: gpsMode === mode ? '#EBF8FF' : '#FFFFFF',
+                color: gpsMode === mode ? '#2B6CB0' : '#4A5568',
                 transition: 'all 0.2s'
               }}>
                 {mode === 'simulated' ? '⏱ Simulated' : '🛰 Real GPS'}
@@ -554,12 +554,12 @@ export default function ViewEDriver() {
               width: '100%', padding: '15px 0', borderRadius: 12, fontSize: 13,
               fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.2,
               background: gpsMode === 'real' || progress >= 100
-                ? 'linear-gradient(135deg,#2563eb,#1d4ed8)'
-                : 'rgba(255,255,255,0.05)',
-              color: gpsMode === 'real' || progress >= 100 ? '#fff' : '#475569',
+                ? 'linear-gradient(135deg,#3182CE,#1A365D)'
+                : '#EDF2F7',
+              color: gpsMode === 'real' || progress >= 100 ? '#fff' : '#A0AEC0',
               border: 'none',
               cursor: gpsMode === 'real' || progress >= 100 ? 'pointer' : 'not-allowed',
-              boxShadow: gpsMode === 'real' || progress >= 100 ? '0 5px 15px rgba(37,99,235,0.35)' : 'none',
+              boxShadow: gpsMode === 'real' || progress >= 100 ? '0 5px 15px rgba(49,151,149,0.2)' : 'none',
               transition: 'all 0.2s'
             }}
           >
@@ -574,13 +574,13 @@ export default function ViewEDriver() {
         <div style={{ textAlign: 'center', padding: '10px 0' }}>
           <div style={{
             width: 64, height: 64, borderRadius: '50%',
-            background: 'rgba(34,197,94,0.1)', border: '1.5px solid rgba(34,197,94,0.3)',
+            background: '#E6FFFA', border: '1.5px solid #319795',
             margin: '0 auto 16px',
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32,
-            color: '#4ade80', boxShadow: '0 4px 14px rgba(34,197,94,0.2)'
+            color: '#319795', boxShadow: '0 4px 14px rgba(49,151,149,0.15)'
           }}>✓</div>
-          <div style={{ color: '#fff', fontWeight: 800, fontSize: 18, marginBottom: 6 }}>Mission Completed</div>
-          <div style={{ color: '#64748b', fontSize: 12, marginBottom: 24 }}>
+          <div style={{ color: '#1A365D', fontWeight: 800, fontSize: 18, marginBottom: 6 }}>Mission Completed</div>
+          <div style={{ color: '#4A5568', fontSize: 12, marginBottom: 24 }}>
             Patient safely handed over · {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>
           <button
@@ -588,9 +588,9 @@ export default function ViewEDriver() {
             style={{
               width: '100%', padding: '15px 0', borderRadius: 12, fontSize: 13,
               fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.2,
-              background: 'linear-gradient(135deg,#1e40af,#1d4ed8)',
+              background: 'linear-gradient(135deg,#1A365D,#2B6CB0)',
               color: '#fff', border: 'none', cursor: 'pointer',
-              boxShadow: '0 4px 15px rgba(37,99,235,0.3)',
+              boxShadow: '0 4px 15px rgba(26,54,93,0.2)',
               transition: 'all 0.2s'
             }}
           >
@@ -604,7 +604,7 @@ export default function ViewEDriver() {
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: '#0f172a' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: '#F7FAFC' }}>
 
       {/* ── Map / Standby Placeholder Container ───────────────────── */}
       <div style={{ position: 'absolute', inset: 0 }}>
@@ -627,15 +627,15 @@ export default function ViewEDriver() {
           <div style={{
             height: '100%', display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center', gap: 16,
-            background: 'linear-gradient(160deg,#0f172a 0%,#1e293b 100%)'
+            background: 'linear-gradient(160deg,#ebf8ff 0%,#ffffff 100%)'
           }}>
             <div className="relative flex items-center justify-center">
               <span style={{ fontSize: 64, animation: 'pulse-ping 2s infinite' }}>📡</span>
             </div>
-            <p style={{ color: '#94a3b8', fontSize: 14, fontWeight: 500, textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
+            <p style={{ color: '#2B6CB0', fontSize: 16, fontWeight: 700, textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
               ArogyaFlow Dispatch Grid Active
             </p>
-            <p style={{ color: '#64748b', fontSize: 12, textAlign: 'center', maxWidth: 260, lineHeight: 1.6, marginTop: -8 }}>
+            <p style={{ color: '#4A5568', fontSize: 13, textAlign: 'center', maxWidth: 260, lineHeight: 1.6, marginTop: -8 }}>
               Monitoring emergency broadcast frequencies...
             </p>
           </div>
@@ -650,11 +650,11 @@ export default function ViewEDriver() {
           left: '20px',
           bottom: '20px',
           width: '380px',
-          background: 'rgba(15, 23, 42, 0.94)',
+          background: 'rgba(255, 255, 255, 0.96)',
           backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
+          border: '1px solid rgba(26, 54, 93, 0.15)',
           borderRadius: '16px',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+          boxShadow: '0 20px 40px rgba(26, 54, 93, 0.15)',
           zIndex: 50,
           display: 'flex',
           flexDirection: 'column',
@@ -664,8 +664,8 @@ export default function ViewEDriver() {
           {/* Sidebar Header */}
           <div style={{
             padding: '16px 20px',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-            background: 'rgba(30,41,59,0.4)',
+            borderBottom: '1px solid rgba(26, 54, 93, 0.1)',
+            background: '#1A365D',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
@@ -678,14 +678,14 @@ export default function ViewEDriver() {
                 flexShrink: 0,
                 animation: isMatching ? 'pulse-dot 1s infinite' : 'none'
               }} />
-              <span style={{ color: '#f1f5f9', fontWeight: 800, fontSize: 14, tracking: 'wide' }}>{statusText}</span>
+              <span style={{ color: '#FFFFFF', fontWeight: 800, fontSize: 14, tracking: 'wide' }}>{statusText}</span>
             </div>
             {isActive && (
               <div style={{
-                background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)',
+                background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)',
                 borderRadius: 8, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6
               }}>
-                <span style={{ color: '#f97316', fontSize: 10, fontWeight: 700, fontFamily: 'monospace' }}>⏱ {formatTime(countdown)}</span>
+                <span style={{ color: '#FFEB3B', fontSize: 10, fontWeight: 700, fontFamily: 'monospace' }}>⏱ {formatTime(countdown)}</span>
               </div>
             )}
           </div>
@@ -703,12 +703,11 @@ export default function ViewEDriver() {
           {/* Top Status Overlay */}
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0,
-            background: 'rgba(15,23,42,0.85)',
-            backdropFilter: 'blur(12px)',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            background: '#1A365D',
             padding: '12px 16px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            zIndex: 50
+            zIndex: 50,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.15)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{
@@ -718,25 +717,25 @@ export default function ViewEDriver() {
                 flexShrink: 0,
                 animation: isMatching ? 'pulse-dot 1s infinite' : 'none'
               }} />
-              <span style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 13 }}>{statusText}</span>
+              <span style={{ color: '#FFFFFF', fontWeight: 700, fontSize: 13 }}>{statusText}</span>
             </div>
 
             {isActive && (
               <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{
-                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
+                  background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
                   borderRadius: 8, padding: '4px 10px', textAlign: 'center'
                 }}>
-                  <div style={{ color: '#94a3b8', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Timer</div>
-                  <div style={{ color: '#f97316', fontWeight: 800, fontSize: 13, fontFamily: 'monospace' }}>{formatTime(countdown)}</div>
+                  <div style={{ color: '#E2E8F0', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Timer</div>
+                  <div style={{ color: '#FFEB3B', fontWeight: 800, fontSize: 13, fontFamily: 'monospace' }}>{formatTime(countdown)}</div>
                 </div>
                 {inTransit && (
                   <div style={{
-                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
+                    background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
                     borderRadius: 8, padding: '4px 10px', textAlign: 'center'
                   }}>
-                    <div style={{ color: '#94a3b8', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Progress</div>
-                    <div style={{ color: '#22c55e', fontWeight: 800, fontSize: 13, fontFamily: 'monospace' }}>{progress}%</div>
+                    <div style={{ color: '#E2E8F0', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Progress</div>
+                    <div style={{ color: '#4ADE80', fontWeight: 800, fontSize: 13, fontFamily: 'monospace' }}>{progress}%</div>
                   </div>
                 )}
               </div>
@@ -746,19 +745,19 @@ export default function ViewEDriver() {
           {/* Bottom Action Sheet */}
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
-            background: 'rgba(15,23,42,0.94)',
+            background: 'rgba(255, 255, 255, 0.98)',
             backdropFilter: 'blur(20px)',
-            borderTop: '1px solid rgba(255,255,255,0.12)',
+            borderTop: '1px solid #E2E8F0',
             borderRadius: '20px 20px 0 0',
             padding: '16px 16px 24px 16px',
             zIndex: 50,
             maxHeight: '55vh',
             overflowY: 'auto',
-            boxShadow: '0 -10px 30px rgba(0,0,0,0.5)',
+            boxShadow: '0 -10px 30px rgba(0,0,0,0.08)',
             transition: 'transform 0.3s ease-out'
           }}>
             {/* Drag Handle */}
-            <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2, margin: '0 auto 16px' }} />
+            <div style={{ width: 40, height: 4, background: '#CBD5E0', borderRadius: 2, margin: '0 auto 16px' }} />
             {renderConsoleContent()}
           </div>
         </>
@@ -785,11 +784,11 @@ export default function ViewEDriver() {
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255,255,255,0.15);
+          background: rgba(26,54,93,0.15);
           border-radius: 3px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255,255,255,0.3);
+          background: rgba(26,54,93,0.3);
         }
       `}</style>
     </div>
@@ -800,11 +799,11 @@ export default function ViewEDriver() {
 function InfoChip({ label, value }) {
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+      background: '#F7FAFC', border: '1px solid #E2E8F0',
       borderRadius: 10, padding: '8px 12px'
     }}>
-      <div style={{ color: '#94a3b8', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 700 }}>{label}</div>
-      <div style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 12, marginTop: 2 }}>{value}</div>
+      <div style={{ color: '#718096', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 700 }}>{label}</div>
+      <div style={{ color: '#1A365D', fontWeight: 600, fontSize: 12, marginTop: 2 }}>{value}</div>
     </div>
   );
 }
