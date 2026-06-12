@@ -750,7 +750,7 @@ export default function ViewEDriver() {
           border: '1px solid rgba(26, 54, 93, 0.15)',
           borderRadius: '16px',
           boxShadow: '0 20px 40px rgba(26, 54, 93, 0.15)',
-          zIndex: 50,
+          zIndex: 1010,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -801,7 +801,7 @@ export default function ViewEDriver() {
             background: '#1A365D',
             padding: '12px 16px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            zIndex: 50,
+            zIndex: 1010,
             boxShadow: '0 2px 10px rgba(0,0,0,0.15)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -845,7 +845,7 @@ export default function ViewEDriver() {
             borderTop: '1px solid #E2E8F0',
             borderRadius: '20px 20px 0 0',
             padding: '12px 16px 24px 16px',
-            zIndex: 50,
+            zIndex: 1010,
             maxHeight: '55vh',
             overflowY: isSheetCollapsed ? 'hidden' : 'auto',
             boxShadow: '0 -10px 30px rgba(0,0,0,0.08)',
