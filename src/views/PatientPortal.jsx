@@ -4,6 +4,7 @@ import { EmergencyContext } from '../context/EmergencyContext';
 import { AuthContext } from '../context/AuthContext';
 import DataField from '../components/DataField';
 import ProgressRing from '../components/ProgressRing';
+import { generatePrescriptionPdf } from '../utils/prescriptionPdf';
 
 export default function ViewAPatient() {
   const { queueSnapshot, privacyGranted, togglePrivacy, checkInPatient } = useContext(QueueContext);
@@ -393,39 +394,66 @@ export default function ViewAPatient() {
             )}
 
             {activeTab === 'prescriptions' && (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left font-mono text-sm border-collapse">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="py-2 text-xs uppercase tracking-widest text-[#718096]">Date</th>
-                      <th className="py-2 text-xs uppercase tracking-widest text-[#718096]">Physician</th>
-                      <th className="py-2 text-xs uppercase tracking-widest text-[#718096]">Rx Details</th>
-                      <th className="py-2 text-xs uppercase tracking-widest text-[#718096] text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {patientData.medicalVault.prescriptions.map((rx, idx) => (
-                      <tr key={idx} className="border-b border-gray-100 hover:bg-slate-50 transition-colors">
-                        <td className="py-3 text-slate-800 font-medium">{rx.date}</td>
-                        <td className="py-3 text-slate-800 font-medium">{rx.doctor}</td>
-                        <td className="py-3 font-semibold text-[#1A365D] notranslate" translate="no">
-                          {privacyGranted ? `${rx.medication} (${rx.dosage})` : '•••••••• (Protected)'}
-                        </td>
-                        <td className="py-3 text-right">
-                          <span
-                            className={`px-2 py-0.5 rounded-md text-xs font-semibold ${
-                              rx.status === 'Filled'
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                : 'bg-amber-50 text-amber-700 border border-amber-100'
-                            }`}
-                          >
-                            {rx.status}
-                          </span>
-                        </td>
+              <div className="space-y-4">
+                {/* PDF Download Action */}
+                {patientData.medicalVault.prescriptions.length > 0 && (() => {
+                  const dates = [...new Set(patientData.medicalVault.prescriptions.map(rx => rx.date))];
+                  const latestDate = dates[0];
+                  const latestRxs = patientData.medicalVault.prescriptions.filter(rx => rx.date === latestDate);
+                  
+                  return (
+                    <div className="bg-sky-50 border border-sky-100 rounded-lg p-4 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <h4 className="text-xs uppercase tracking-widest text-[#1A365D] font-bold">Latest Prescription PDF</h4>
+                        <p className="text-xs text-slate-600 mt-1">
+                          Prescribed by <strong>{latestRxs[0]?.doctor || patientData.doctor}</strong> on <strong>{latestDate}</strong> ({latestRxs.length} medicine{latestRxs.length > 1 ? 's' : ''})
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => generatePrescriptionPdf(patientData, latestRxs, latestRxs[0]?.doctor || patientData.doctor)}
+                        className="bg-[#1A365D] hover:bg-[#2B6CB0] text-white font-bold py-2 px-4 rounded-md text-xs uppercase tracking-wider transition-colors flex items-center space-x-1.5 cursor-pointer shadow-sm shrink-0"
+                      >
+                        <span>📄</span>
+                        <span>Download Prescription PDF</span>
+                      </button>
+                    </div>
+                  );
+                })()}
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left font-mono text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="py-2 text-xs uppercase tracking-widest text-[#718096]">Date</th>
+                        <th className="py-2 text-xs uppercase tracking-widest text-[#718096]">Physician</th>
+                        <th className="py-2 text-xs uppercase tracking-widest text-[#718096]">Rx Details</th>
+                        <th className="py-2 text-xs uppercase tracking-widest text-[#718096] text-right">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {patientData.medicalVault.prescriptions.map((rx, idx) => (
+                        <tr key={idx} className="border-b border-gray-100 hover:bg-slate-50 transition-colors">
+                          <td className="py-3 text-slate-800 font-medium">{rx.date}</td>
+                          <td className="py-3 text-slate-800 font-medium">{rx.doctor}</td>
+                          <td className="py-3 font-semibold text-[#1A365D] notranslate" translate="no">
+                            {privacyGranted ? `${rx.medication} (${rx.dosage})` : '•••••••• (Protected)'}
+                          </td>
+                          <td className="py-3 text-right">
+                            <span
+                              className={`px-2 py-0.5 rounded-md text-xs font-semibold ${
+                                rx.status === 'Filled'
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                  : 'bg-amber-50 text-amber-700 border border-amber-100'
+                              }`}
+                            >
+                              {rx.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>

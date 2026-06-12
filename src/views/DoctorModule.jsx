@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect, useRef } from 'react';
 import { QueueContext } from '../context/QueueContext';
 import DataField from '../components/DataField';
 import jsQR from 'jsqr';
+import { generatePrescriptionPdf } from '../utils/prescriptionPdf';
 
 export default function ViewBDoctor() {
   const { queueSnapshot, callNextPatient, dispatchPrescription, privacyGranted, grantedPatientId, togglePrivacy, grantPrivacy } = useContext(QueueContext);
@@ -696,6 +697,59 @@ export default function ViewBDoctor() {
                 </div>
               </form>
             </div>
+
+            {/* Sub-panel E: Medicines Prescribed in this Consultation */}
+            {(() => {
+              const todayStr = new Date().toISOString().split('T')[0];
+              const todayPrescriptions = activePatient?.medicalVault?.prescriptions?.filter(rx => rx.date === todayStr) || [];
+              if (todayPrescriptions.length === 0) return null;
+              return (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5 mt-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                    <div>
+                      <h3 className="text-xs uppercase tracking-widest text-[#718096] font-bold">Session Prescription Compilation</h3>
+                      <p className="text-xs text-[#718096] mt-1">Generate a digital prescription for today's medications</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => generatePrescriptionPdf(activePatient, todayPrescriptions, activePatient.doctor)}
+                      className="bg-[#1A365D] hover:bg-[#2B6CB0] text-white font-bold py-2 px-4 rounded-md text-xs uppercase tracking-wider transition-colors flex items-center space-x-1.5 cursor-pointer shadow-sm shrink-0"
+                    >
+                      <span>📄</span>
+                      <span>Generate Prescription PDF</span>
+                    </button>
+                  </div>
+                  <div className="overflow-x-auto font-mono text-xs">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-slate-50 text-[#718096]">
+                          <th className="p-2.5 font-bold uppercase tracking-wider">#</th>
+                          <th className="p-2.5 font-bold uppercase tracking-wider">Medication</th>
+                          <th className="p-2.5 font-bold uppercase tracking-wider">Dosage / Frequency</th>
+                          <th className="p-2.5 font-bold uppercase tracking-wider">Instructions</th>
+                          <th className="p-2.5 font-bold uppercase tracking-wider text-right">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {todayPrescriptions.map((rx, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                            <td className="p-2.5 text-slate-500">{idx + 1}</td>
+                            <td className="p-2.5 text-[#1A365D] font-bold notranslate" translate="no">{rx.medication}</td>
+                            <td className="p-2.5 text-slate-700 font-semibold">{rx.dosage}</td>
+                            <td className="p-2.5 text-slate-600">{rx.notes || 'Take as directed'}</td>
+                            <td className="p-2.5 text-right">
+                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-100">
+                                {rx.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>
