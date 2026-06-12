@@ -430,6 +430,7 @@ export function QueueProvider({ children }) {
   const [activePatientId, setActivePatientId] = useState('P-42');
   const [lastDispatchedRx, setLastDispatchedRx] = useState(null);
   const [privacyGranted, setPrivacyGranted] = useState(false);
+  const [grantedPatientId, setGrantedPatientId] = useState(null); // which patient's QR was scanned
   const [pulseCounter, setPulseCounter] = useState(0);
 
   // Connection manager & Postgres subscription effects
@@ -672,6 +673,22 @@ export function QueueProvider({ children }) {
     }
   };
 
+  // Grant privacy for a SPECIFIC patient (called after QR scan)
+  const grantPrivacy = async (patientId) => {
+    setGrantedPatientId(patientId);
+    setPrivacyGranted(true);
+    if (dbConnected) {
+      try {
+        await supabase.from('patients').update({ privacy_granted: true }).eq('id', patientId);
+      } catch (err) {
+        console.error('DB grantPrivacy failed:', err);
+      }
+    } else {
+      // For offline patients, just track in state
+      dispatch({ type: 'TOGGLE_PRIVACY' });
+    }
+  };
+
   const togglePrivacy = async (patientId) => {
     if (dbConnected) {
       try {
@@ -819,6 +836,7 @@ export function QueueProvider({ children }) {
         activePatientSnapshot: getActivePatientSnapshot(),
         rooms: dbConnected ? rooms : offlineState.rooms,
         privacyGranted: dbConnected ? privacyGranted : offlineState.privacyGranted,
+        grantedPatientId,
         kpiCheckins: dbConnected ? 47 : 47,
         queueSlots: [
           'waiting', 'in-progress', 'waiting', 'empty', 'completed',
@@ -834,6 +852,7 @@ export function QueueProvider({ children }) {
         beginPrep,
         completePrep,
         togglePrivacy,
+        grantPrivacy,
         checkInPatient
       }}
     >

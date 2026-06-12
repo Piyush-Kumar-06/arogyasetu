@@ -432,40 +432,44 @@ export default function ViewAPatient() {
         </div>
 
         {/* Section 3 - Privacy Handshake Panel */}
-        <div className="col-span-12 lg:col-span-4 bg-white rounded-lg shadow-sm border border-gray-100 p-5 flex flex-col justify-between items-center text-center">
-          <div>
-            <h2 className="text-xs uppercase tracking-widest text-[#718096] font-bold mb-4">Privacy Handshake</h2>
-            <p className="text-xs text-[#718096] mb-6 leading-relaxed">
-              Show this QR code to your assigned physician to grant temporary record access.
-            </p>
-          </div>
+        <div className="col-span-12 lg:col-span-4 bg-white rounded-lg shadow-sm border border-gray-100 p-5 flex flex-col items-center text-center">
+          <h2 className="text-xs uppercase tracking-widest text-[#718096] font-bold mb-1">Doctor Access QR</h2>
+          <p className="text-xs text-[#718096] mb-4 leading-relaxed">
+            Show this to your doctor. They scan it to unlock your full medical record.
+          </p>
 
-          <div className="relative mb-6">
+          {/* Large QR Code */}
+          <div className="relative mb-4 p-3 bg-white border-2 border-[#1A365D] rounded-xl shadow-md">
             <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=arogyaflow:consent:${patientData.id}`}
-              alt="Handshake QR"
-              className="w-36 h-36 border border-gray-200 p-2 bg-white rounded-md notranslate"
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data=arogyaflow:consent:${patientData.id}`}
+              alt="Doctor Access QR"
+              className="w-44 h-44 notranslate"
               translate="no"
             />
-
-            <div className="absolute -bottom-4 -right-4 bg-white rounded-md p-1.5 shadow-sm border border-gray-100 flex items-center space-x-1">
-              <ProgressRing size={24} strokeWidth={3} percentage={75} color="#319795" />
-              <span className="font-mono text-[10px] font-bold text-[#319795]">4:32</span>
+            {/* ArogyaFlow watermark */}
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-[#1A365D] text-white text-[9px] font-bold px-3 py-0.5 rounded-full tracking-widest uppercase">
+              ArogyaFlow
             </div>
           </div>
 
-          <div className="mt-4 w-full">
-            <span
-              className={`px-3 py-1.5 rounded-md text-xs font-bold block uppercase tracking-wider ${
-                privacyGranted
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'bg-amber-50 text-amber-700 border border-amber-200'
-              }`}
-            >
-              {privacyGranted ? 'ACCESS GRANTED' : 'AWAITING SCAN'}
+          {/* Patient ID chip */}
+          <div className="mt-4 bg-slate-50 border border-slate-200 rounded-md px-3 py-2 w-full">
+            <div className="text-[10px] text-[#718096] uppercase tracking-wider mb-0.5">Patient ID</div>
+            <div className="font-mono text-xs font-bold text-[#1A365D] break-all">{patientData.id}</div>
+          </div>
+
+          {/* Status badge */}
+          <div className="mt-3 w-full">
+            <span className={`px-3 py-1.5 rounded-md text-xs font-bold block uppercase tracking-wider ${
+              privacyGranted
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
+            }`}>
+              {privacyGranted ? '✅ Record Unlocked by Doctor' : '🔒 Awaiting Doctor Scan'}
             </span>
           </div>
         </div>
+
       </div>
 
       {/* Floating Emergency SOS Footer Trigger */}

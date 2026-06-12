@@ -4,7 +4,7 @@ import DataField from '../components/DataField';
 import jsQR from 'jsqr';
 
 export default function ViewBDoctor() {
-  const { queueSnapshot, callNextPatient, dispatchPrescription, privacyGranted, togglePrivacy } = useContext(QueueContext);
+  const { queueSnapshot, callNextPatient, dispatchPrescription, privacyGranted, grantedPatientId, togglePrivacy, grantPrivacy } = useContext(QueueContext);
   const [selectedPatientId, setSelectedPatientId] = useState('P-42');
   const [activeHistoryTab, setActiveHistoryTab] = useState('general');
 
@@ -26,6 +26,7 @@ export default function ViewBDoctor() {
   // Webcam QR scanner states & refs
   const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState('');
+  const [scanSuccess, setScanSuccess] = useState(null); // { name, token }
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -97,14 +98,29 @@ export default function ViewBDoctor() {
         });
 
         if (code) {
-          console.log('Found QR code:', code.data);
-          if (code.data === `arogyaflow:consent:${selectedPatientId}`) {
-            playBeep();
-            if (!privacyGranted) {
-              togglePrivacy();
+          const QR_PREFIX = 'arogyaflow:consent:';
+          if (code.data.startsWith(QR_PREFIX)) {
+            const scannedPatientId = code.data.replace(QR_PREFIX, '');
+
+            // Find the patient in queue by their ID
+            const matchedDoc = queueSnapshot.docs.find(doc => doc.id === scannedPatientId);
+
+            if (matchedDoc) {
+              playBeep();
+              const matchedPatient = matchedDoc.data();
+              // Auto-select this patient in the doctor's view
+              setSelectedPatientId(scannedPatientId);
+              // Grant privacy specifically for this patient
+              grantPrivacy(scannedPatientId);
+              setScanSuccess({ name: matchedPatient.name, token: matchedPatient.token });
+              setIsScanning(false);
+              return;
+            } else {
+              // Patient not in current queue — show helpful error
+              setScanError(`Patient ID not in current queue. They may need to check in first.`);
             }
-            setIsScanning(false);
-            return;
+          } else {
+            setScanError('Invalid QR code. Only ArogyaFlow patient QR codes are accepted.');
           }
         }
       }
@@ -182,6 +198,9 @@ export default function ViewBDoctor() {
 
   const activePatientDoc = queueSnapshot.docs.find(doc => doc.id === selectedPatientId);
   const activePatient = activePatientDoc ? activePatientDoc.data() : null;
+
+  // Privacy is only granted if the SELECTED patient's QR was actually scanned
+  const privacyGrantedForSelected = privacyGranted && grantedPatientId === selectedPatientId;
 
   const handleCallNext = () => {
     const nextPatient = queueSnapshot.docs.find(doc => doc.data().status === 'waiting');
@@ -318,15 +337,35 @@ export default function ViewBDoctor() {
               </div>
             </div>
 
-            {/* Privacy Check Alert */}
-            {!privacyGranted && activePatient.id === 'P-42' && (
+            )}
+
+            {/* QR Scan Success Toast */}
+            {scanSuccess && (
+              <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-md flex justify-between items-center">
+                <div className="flex items-center space-x-3 text-emerald-800 text-sm">
+                  <span className="text-xl">✅</span>
+                  <span>
+                    <strong>Access Granted:</strong> Showing medical records for <strong>{scanSuccess.name}</strong> ({scanSuccess.token}). Record is now unlocked.
+                  </span>
+                </div>
+                <button
+                  onClick={() => setScanSuccess(null)}
+                  className="ml-4 text-emerald-600 hover:text-emerald-800 text-xs font-bold cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* Privacy Lockdown Banner — shows for any patient whose QR hasn't been scanned yet */}
+            {!privacyGrantedForSelected && (
               <div className="bg-amber-50 border border-amber-200 p-4 rounded-md flex justify-between items-center">
                 <div className="flex items-center space-x-3 text-amber-800 text-sm">
                   <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                   <span>
-                    <strong>Privacy Lockdown:</strong> This patient's record is locked. Scan their handshake QR code to unlock historic clinical charts.
+                    <strong>Privacy Lock:</strong> Ask the patient to show their QR code, then scan it to unlock their full medical record.
                   </span>
                 </div>
                 <button
@@ -368,7 +407,7 @@ export default function ViewBDoctor() {
                         key={label}
                         label={label}
                         value={val}
-                        isLocked={activePatient.id === 'P-42' ? !privacyGranted : false}
+                        isLocked={!privacyGrantedForSelected}
                       />
                     ))}
                   </div>
@@ -381,7 +420,7 @@ export default function ViewBDoctor() {
                         key={label}
                         label={label}
                         value={val}
-                        isLocked={activePatient.id === 'P-42' ? !privacyGranted : false}
+                        isLocked={!privacyGrantedForSelected}
                       />
                     ))}
                   </div>
@@ -394,7 +433,7 @@ export default function ViewBDoctor() {
                         key={label}
                         label={label}
                         value={val}
-                        isLocked={activePatient.id === 'P-42' ? !privacyGranted : false}
+                        isLocked={!privacyGrantedForSelected}
                       />
                     ))}
                   </div>
