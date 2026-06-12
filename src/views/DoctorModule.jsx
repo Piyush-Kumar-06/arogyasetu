@@ -338,8 +338,6 @@ export default function ViewBDoctor() {
               </div>
             </div>
 
-            )}
-
             {/* QR Scan Success Toast */}
             {scanSuccess && (
               <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-md flex justify-between items-center">
