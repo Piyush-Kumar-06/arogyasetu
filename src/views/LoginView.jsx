@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { QueueContext } from '../context/QueueContext';
-import medicalLogo from '../assets/ArogyaFlow_Medical_Logo_Gradient.jpg-removebg-preview.png';
+import medicalLogo from '../assets/ArogyaFlow Medical Logo Gradient.jpg';
 
 export default function LoginView() {
   const { login, signup, dbConnected } = useContext(AuthContext);

@@ -8,7 +8,7 @@ import ViewBDoctor from './views/DoctorModule';
 import ViewDPharmacyAdmin from './views/PharmacyAdmin';
 import ViewEDriver from './views/DriverPortal';
 import LoginView from './views/LoginView';
-import medicalLogo from './assets/ArogyaFlow_Medical_Logo_Gradient.jpg-removebg-preview.png';
+import medicalLogo from './assets/ArogyaFlow Medical Logo Gradient.jpg';
 
 // Slim dark nav bar for the driver's full-screen map view
 function DriverNav() {

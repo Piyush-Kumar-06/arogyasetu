@@ -3,7 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import { QueueContext } from '../context/QueueContext';
 import { EmergencyContext } from '../context/EmergencyContext';
 import ViewCEmergencyModal from '../views/EmergencyModal';
-import medicalLogo from '../assets/ArogyaFlow_Medical_Logo_Gradient.jpg-removebg-preview.png';
+import medicalLogo from '../assets/ArogyaFlow Medical Logo Gradient.jpg';
 
 export default function AppShell({ children }) {
   const { role, setRole, logout, user } = useContext(AuthContext);
