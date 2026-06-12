@@ -372,7 +372,7 @@ export default function ViewAPatient() {
             {activeTab === 'general' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(patientData.medicalVault.general).map(([label, val]) => (
-                  <DataField key={label} label={label} value={val} isLocked={!privacyGranted} />
+                  <DataField key={label} label={label} value={val} isLocked={false} />
                 ))}
               </div>
             )}
@@ -380,7 +380,7 @@ export default function ViewAPatient() {
             {activeTab === 'cardiology' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(patientData.medicalVault.cardiology).map(([label, val]) => (
-                  <DataField key={label} label={label} value={val} isLocked={!privacyGranted} />
+                  <DataField key={label} label={label} value={val} isLocked={false} />
                 ))}
               </div>
             )}
@@ -388,7 +388,7 @@ export default function ViewAPatient() {
             {activeTab === 'dermatology' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(patientData.medicalVault.dermatology).map(([label, val]) => (
-                  <DataField key={label} label={label} value={val} isLocked={!privacyGranted} />
+                  <DataField key={label} label={label} value={val} isLocked={false} />
                 ))}
               </div>
             )}
@@ -436,7 +436,7 @@ export default function ViewAPatient() {
                           <td className="py-3 text-slate-800 font-medium">{rx.date}</td>
                           <td className="py-3 text-slate-800 font-medium">{rx.doctor}</td>
                           <td className="py-3 font-semibold text-[#1A365D] notranslate" translate="no">
-                            {privacyGranted ? `${rx.medication} (${rx.dosage})` : '•••••••• (Protected)'}
+                            {`${rx.medication} (${rx.dosage})`}
                           </td>
                           <td className="py-3 text-right">
                             <span
