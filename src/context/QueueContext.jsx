@@ -405,6 +405,32 @@ function queueReducer(state, action) {
       };
     }
 
+    case 'UPDATE_PROFILE': {
+      const updatedPatients = state.patients.map(p => {
+        if (p.id === action.payload.patientId) {
+          const updatedVault = {
+            ...p.medicalVault,
+            general: {
+              ...p.medicalVault.general,
+              'Blood Group': action.payload.profileUpdates.bloodGroup || p.medicalVault.general['Blood Group'],
+              'DOB': action.payload.profileUpdates.DOB || p.medicalVault.general['DOB'],
+              'Emergency Contact': action.payload.profileUpdates.emergencyContact || p.medicalVault.general['Emergency Contact'],
+              'Known Allergies': action.payload.profileUpdates.knownAllergies || p.medicalVault.general['Known Allergies'],
+              'Insurance ID': action.payload.profileUpdates.insuranceID || p.medicalVault.general['Insurance ID'],
+            }
+          };
+          return {
+            ...p,
+            age: parseInt(action.payload.profileUpdates.age) || p.age,
+            bloodGroup: action.payload.profileUpdates.bloodGroup || p.bloodGroup,
+            medicalVault: updatedVault
+          };
+        }
+        return p;
+      });
+      return { ...state, patients: updatedPatients };
+    }
+
     default:
       return state;
   }
@@ -799,6 +825,50 @@ export function QueueProvider({ children }) {
     }
   };
 
+  const updatePatientProfile = async (patientId, profileUpdates) => {
+    if (dbConnected) {
+      try {
+        const targetPatient = patients.find(p => p.id === patientId);
+        if (!targetPatient) return;
+
+        const updatedVault = {
+          ...targetPatient.medicalVault,
+          general: {
+            ...targetPatient.medicalVault.general,
+            'Blood Group': profileUpdates.bloodGroup || targetPatient.medicalVault.general['Blood Group'],
+            'DOB': profileUpdates.DOB || targetPatient.medicalVault.general['DOB'],
+            'Emergency Contact': profileUpdates.emergencyContact || targetPatient.medicalVault.general['Emergency Contact'],
+            'Known Allergies': profileUpdates.knownAllergies || targetPatient.medicalVault.general['Known Allergies'],
+            'Insurance ID': profileUpdates.insuranceID || targetPatient.medicalVault.general['Insurance ID'],
+          }
+        };
+
+        await supabase.from('patients').update({
+          age: parseInt(profileUpdates.age) || targetPatient.age,
+          blood_group: profileUpdates.bloodGroup || targetPatient.bloodGroup,
+          medical_vault: updatedVault
+        }).eq('id', patientId);
+
+        setPatients(prev => prev.map(p => {
+          if (p.id === patientId) {
+            return {
+              ...p,
+              age: parseInt(profileUpdates.age) || p.age,
+              bloodGroup: profileUpdates.bloodGroup || p.bloodGroup,
+              medicalVault: updatedVault
+            };
+          }
+          return p;
+        }));
+      } catch (err) {
+        console.error('DB updatePatientProfile failed:', err);
+        throw err;
+      }
+    } else {
+      dispatch({ type: 'UPDATE_PROFILE', payload: { patientId, profileUpdates } });
+    }
+  };
+
   const getQueueSnapshot = () => {
     const activeList = dbConnected ? patients : offlineState.patients;
     return {
@@ -853,7 +923,8 @@ export function QueueProvider({ children }) {
         completePrep,
         togglePrivacy,
         grantPrivacy,
-        checkInPatient
+        checkInPatient,
+        updatePatientProfile
       }}
     >
       {children}
