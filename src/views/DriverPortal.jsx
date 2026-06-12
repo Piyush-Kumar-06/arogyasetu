@@ -42,6 +42,99 @@ export default function ViewEDriver() {
   const [showHospitalPicker, setShowHospitalPicker] = useState(false);
   const [fetchingHospitals, setFetchingHospitals] = useState(false);
 
+  // Collapsible bottom sheet states
+  const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+
+  const startYRef = React.useRef(0);
+  const isSheetCollapsedRef = React.useRef(isSheetCollapsed);
+  const dragOccurredRef = React.useRef(false);
+
+  useEffect(() => {
+    isSheetCollapsedRef.current = isSheetCollapsed;
+  }, [isSheetCollapsed]);
+
+  const handleDragStart = (clientY) => {
+    setIsDragging(true);
+    startYRef.current = clientY;
+    setDragOffset(0);
+    dragOccurredRef.current = false;
+  };
+
+  const handleDragMove = (clientY) => {
+    const deltaY = clientY - startYRef.current;
+    if (Math.abs(deltaY) > 5) {
+      dragOccurredRef.current = true;
+    }
+    if (isSheetCollapsedRef.current) {
+      // Collapsed: only allow dragging UP (negative deltaY)
+      setDragOffset(Math.min(0, deltaY));
+    } else {
+      // Expanded: only allow dragging DOWN (positive deltaY)
+      setDragOffset(Math.max(0, deltaY));
+    }
+  };
+
+  const handleDragEnd = (clientY) => {
+    setIsDragging(false);
+    const deltaY = clientY - startYRef.current;
+    if (Math.abs(deltaY) > 5) {
+      dragOccurredRef.current = true;
+    }
+    if (isSheetCollapsedRef.current) {
+      if (deltaY < -60) {
+        setIsSheetCollapsed(false);
+      }
+    } else {
+      if (deltaY > 60) {
+        setIsSheetCollapsed(true);
+      }
+    }
+    setDragOffset(0);
+  };
+
+  const handleTouchStart = (e) => {
+    handleDragStart(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e) => {
+    handleDragMove(e.touches[0].clientY);
+  };
+
+  const handleTouchEnd = (e) => {
+    handleDragEnd(e.changedTouches[0].clientY);
+  };
+
+  const handleHandleClick = (e) => {
+    if (dragOccurredRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    } else {
+      setIsSheetCollapsed(prev => !prev);
+    }
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const onMouseMove = (e) => {
+      handleDragMove(e.clientY);
+    };
+
+    const onMouseUp = (e) => {
+      handleDragEnd(e.clientY);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [isDragging]);
+
   // Screen size detection
   const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 768);
 
@@ -200,7 +293,9 @@ export default function ViewEDriver() {
   const { text: statusText, color: statusColor } = statusLabel();
 
   // Dynamic layout offsets for Map centering
-  const bottomPaddingValue = isLargeScreen ? 0 : Math.round(window.innerHeight * 0.40);
+  const bottomPaddingValue = isLargeScreen 
+    ? 0 
+    : (isSheetCollapsed ? 60 : Math.round(window.innerHeight * 0.40));
   const leftPaddingValue = isLargeScreen ? 380 : 0;
 
   // Render Hospital Picker inside the console cards
@@ -749,16 +844,52 @@ export default function ViewEDriver() {
             backdropFilter: 'blur(20px)',
             borderTop: '1px solid #E2E8F0',
             borderRadius: '20px 20px 0 0',
-            padding: '16px 16px 24px 16px',
+            padding: '12px 16px 24px 16px',
             zIndex: 50,
             maxHeight: '55vh',
-            overflowY: 'auto',
+            overflowY: isSheetCollapsed ? 'hidden' : 'auto',
             boxShadow: '0 -10px 30px rgba(0,0,0,0.08)',
-            transition: 'transform 0.3s ease-out'
+            transform: isDragging
+              ? (isSheetCollapsed ? `translateY(calc(100% - 56px + ${dragOffset}px))` : `translateY(${dragOffset}px)`)
+              : (isSheetCollapsed ? 'translateY(calc(100% - 56px))' : 'translateY(0)'),
+            transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
           }}>
-            {/* Drag Handle */}
-            <div style={{ width: 40, height: 4, background: '#CBD5E0', borderRadius: 2, margin: '0 auto 16px' }} />
-            {renderConsoleContent()}
+            {/* Drag Handle Wrapper */}
+            <div 
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleDragStart(e.clientY);
+              }}
+              onClick={handleHandleClick}
+              style={{ 
+                width: '100%', 
+                padding: '8px 0 14px 0', 
+                cursor: isDragging ? 'grabbing' : 'grab',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                flexShrink: 0,
+                userSelect: 'none'
+              }}
+            >
+              <div style={{ width: 40, height: 4, background: '#CBD5E0', borderRadius: 2 }} />
+              {isSheetCollapsed && (
+                <div style={{ fontSize: 9, color: '#718096', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginTop: 6 }}>
+                  Swipe Up or Tap to Expand
+                </div>
+              )}
+            </div>
+            
+            <div style={{ 
+              opacity: isSheetCollapsed ? 0 : 1, 
+              transition: 'opacity 0.2s', 
+              pointerEvents: isSheetCollapsed ? 'none' : 'auto' 
+            }}>
+              {renderConsoleContent()}
+            </div>
           </div>
         </>
       )}
