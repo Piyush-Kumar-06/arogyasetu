@@ -65,6 +65,7 @@ export default function LiveMap({
   hospitalLat, hospitalLng,
   patientName, phase, sosState,
   bottomPadding = 0,
+  leftPadding = 0,
 }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -145,25 +146,28 @@ export default function LiveMap({
       hospitalMarkerRef.current = null;
     }
 
-    // Fit bounds (accounting for bottom sheet)
+    // Fit bounds (accounting for bottom sheet and side panel)
     const bp = bottomPadding || 0;
+    const lp = leftPadding || 0;
     if (bounds.length >= 2) {
       try {
         map.fitBounds(L.latLngBounds(bounds), {
-          paddingTopLeft: [40, 60],
+          paddingTopLeft: [lp + 40, 60],
           paddingBottomRight: [40, bp + 40],
           maxZoom: 16,
         });
       } catch (_) {}
     } else if (bounds.length === 1) {
       map.setView(bounds[0], 15);
-      if (bp > 0) {
+      if (bp > 0 || lp > 0) {
         setTimeout(() => {
-          if (mapInstanceRef.current) mapInstanceRef.current.panBy([0, -(bp / 2)], { animate: false });
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.panBy([-(lp / 2), -(bp / 2)], { animate: false });
+          }
         }, 60);
       }
     }
-  }, [pLat, pLng, driverLat, driverLng, hospitalLat, hospitalLng, phase, patientName, bottomPadding, sosState]);
+  }, [pLat, pLng, driverLat, driverLng, hospitalLat, hospitalLng, phase, patientName, bottomPadding, leftPadding, sosState]);
 
   // ── 3. Fetch REAL ROAD route via OSRM (async, triggers on phase/dest change) ──
   useEffect(() => {

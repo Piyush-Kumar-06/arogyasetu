@@ -42,6 +42,17 @@ export default function ViewEDriver() {
   const [showHospitalPicker, setShowHospitalPicker] = useState(false);
   const [fetchingHospitals, setFetchingHospitals] = useState(false);
 
+  // Screen size detection
+  const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsLargeScreen(window.innerWidth >= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Auto-drive simulation effect
   useEffect(() => {
     let timer;
@@ -179,19 +190,423 @@ export default function ViewEDriver() {
   const done = phase === 5;
 
   const statusLabel = () => {
-    if (!isActive) return { text: 'On Duty · Standby', color: '#6B7280' };
-    if (isMatching) return { text: '🚨 New Emergency Incoming', color: '#DC2626' };
-    if (phase === 3) return { text: '🚑 En Route to Patient', color: '#059669' };
-    if (phase === 4) return { text: '🏥 Transporting to Hospital', color: '#2563EB' };
-    if (phase === 5) return { text: '✅ Handover Complete', color: '#059669' };
+    if (!isActive) return { text: 'On Duty · Standby', color: '#10B981' };
+    if (isMatching) return { text: '🚨 Dispatch Pending', color: '#EF4444' };
+    if (phase === 3) return { text: '🚑 En Route to Patient', color: '#10B981' };
+    if (phase === 4) return { text: '🏥 Transporting to Hospital', color: '#3B82F6' };
+    if (phase === 5) return { text: '✅ Mission Completed', color: '#10B981' };
     return { text: 'Standby', color: '#6B7280' };
   };
   const { text: statusText, color: statusColor } = statusLabel();
 
+  // Dynamic layout offsets for Map centering
+  const bottomPaddingValue = isLargeScreen ? 0 : Math.round(window.innerHeight * 0.40);
+  const leftPaddingValue = isLargeScreen ? 380 : 0;
+
+  // Render Hospital Picker inside the console cards
+  const renderHospitalPickerContent = () => {
+    return (
+      <div>
+        <div style={{ color: '#f1f5f9', fontWeight: 800, fontSize: 16, marginBottom: 4 }}>🏥 Select Nearest Hospital</div>
+        <div style={{ color: '#64748b', fontSize: 11, marginBottom: 16 }}>Real hospitals near patient's location (OpenStreetMap)</div>
+
+        {nearbyHospitals.length === 0 ? (
+          <div style={{ color: '#64748b', textAlign: 'center', padding: '24px 0', fontSize: 12 }}>
+            No hospitals found nearby. Proceeding with default.
+          </div>
+        ) : nearbyHospitals.map((h, i) => {
+          const distKm = (Math.hypot(
+            (h.lat - (patientLat || 28.6139)) * 111,
+            (h.lng - (patientLng || 77.209)) * 111 * Math.cos((patientLat || 28.6139) * Math.PI / 180)
+          )).toFixed(1);
+          return (
+            <button
+              key={h.id}
+              onClick={() => handleSelectHospital({ ...h, distance: `${distKm} km` })}
+              style={{
+                width: '100%', marginBottom: 10, padding: '12px 14px',
+                borderRadius: 12, textAlign: 'left', cursor: 'pointer',
+                background: i === 0 ? 'rgba(5,150,105,0.15)' : 'rgba(255,255,255,0.04)',
+                border: `1.5px solid ${i === 0 ? 'rgba(5,150,105,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                transition: 'all 0.2s',
+                color: '#fff'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  <span style={{ fontSize: 20, flexShrink: 0 }}>🏥</span>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 13, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{h.name}</div>
+                    <div style={{ color: '#64748b', fontSize: 10, marginTop: 2, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {h.emergency ? '🚨 Emergency Unit · ' : ''}{h.type}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ color: i === 0 ? '#4ade80' : '#94a3b8', fontWeight: 700, fontSize: 13 }}>{distKm} km</div>
+                  {i === 0 && <div style={{ color: '#4ade80', fontSize: 9, fontWeight: 700 }}>NEAREST</div>}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+
+        <button
+          onClick={() => setShowHospitalPicker(false)}
+          style={{
+            width: '100%', marginTop: 6, padding: '12px 0', borderRadius: 12,
+            background: 'rgba(220,38,38,0.12)', border: '1px solid rgba(220,38,38,0.3)',
+            color: '#fca5a5', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+        >Cancel</button>
+      </div>
+    );
+  };
+
+  const renderConsoleContent = () => {
+    if (showHospitalPicker) {
+      return renderHospitalPickerContent();
+    }
+
+    if (!isActive) {
+      return (
+        <div style={{ textAlign: 'center', padding: '12px 0' }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: '50%',
+            background: 'linear-gradient(135deg,#1e3a5f,#1d4ed8)',
+            margin: '0 auto 16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32,
+            boxShadow: '0 4px 14px rgba(29,78,216,0.3)'
+          }}>🚑</div>
+          <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>
+            {user?.name || user?.email?.split('@')[0] || 'Emergency Driver'}
+          </div>
+          <div style={{ color: '#64748b', fontSize: 13, marginBottom: 20 }}>
+            Active Unit ID: {user?.id ? `ALS-${user.id.substring(0, 4).toUpperCase()}` : 'ALS-9876'}
+          </div>
+          <div style={{
+            background: 'rgba(34,197,94,0.08)', border: '1.5px solid rgba(34,197,94,0.25)',
+            borderRadius: 12, padding: '12px 16px', color: '#4ade80', fontSize: 13, fontWeight: 600,
+            display: 'inline-flex', alignItems: 'center', gap: 8
+          }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
+            On Duty · Standby for dispatch
+          </div>
+        </div>
+      );
+    }
+
+    if (isMatching) {
+      return (
+        <div>
+          <div style={{
+            background: 'linear-gradient(135deg,rgba(220,38,38,0.15),rgba(239,68,68,0.05))',
+            border: '1px solid rgba(239,68,68,0.35)',
+            borderRadius: 14, padding: 16, marginBottom: 16,
+            animation: 'slide-up 0.3s ease'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 24, animation: 'pulse-dot 1s infinite' }}>🚨</span>
+              <div>
+                <div style={{ color: '#fca5a5', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 700 }}>Dispatch Broadcast</div>
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: 17 }}>NEW SOS DISPATCH</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <InfoChip label="Patient" value={patientName || 'Unknown'} />
+              <InfoChip label="Condition" value={symptom || 'Medical Emergency'} />
+              <InfoChip label="Distance" value="~1.8 km" />
+              <InfoChip label="ETA" value="~4 min" />
+            </div>
+
+            {sosLocation && (
+              <div style={{ marginTop: 12, padding: '10px 12px', background: 'rgba(0,0,0,0.25)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ color: '#94a3b8', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Pickup Location</div>
+                <div style={{ color: '#cbd5e1', fontSize: 12, fontWeight: 500 }}>📍 {sosLocation}</div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+            {['simulated', 'real'].map(mode => (
+              <button
+                key={mode}
+                onClick={() => setGpsMode(mode)}
+                style={{
+                  flex: 1, padding: '10px 0', borderRadius: 10, fontSize: 11, fontWeight: 700,
+                  textTransform: 'uppercase', letterSpacing: 1, cursor: 'pointer',
+                  border: gpsMode === mode ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.08)',
+                  background: gpsMode === mode ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)',
+                  color: gpsMode === mode ? '#93c5fd' : '#64748b',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {mode === 'simulated' ? '⏱ Simulate' : '🛰 Real GPS'}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handleAccept}
+            style={{
+              width: '100%', padding: '16px 0', borderRadius: 12, fontSize: 14,
+              fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5,
+              background: 'linear-gradient(135deg,#dc2626,#b91c1c)',
+              color: '#fff', border: 'none', cursor: 'pointer',
+              boxShadow: '0 6px 20px rgba(220,38,38,0.4)',
+              transition: 'all 0.1s'
+            }}
+            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            ✅ Accept Ride
+          </button>
+        </div>
+      );
+    }
+
+    if (phase === 3) {
+      return (
+        <div>
+          <div style={{
+            background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.25)',
+            borderRadius: 14, padding: 16, marginBottom: 16
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 24, animation: 'pulse-dot 1.5s infinite' }}>🚑</span>
+              <div>
+                <div style={{ color: '#6ee7b7', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 700 }}>Dispatch Active</div>
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: 16 }}>En Route to Patient</div>
+              </div>
+              <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                <div style={{ color: '#6ee7b7', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Progress</div>
+                <div style={{ color: '#22c55e', fontWeight: 800, fontSize: 18, fontFamily: 'monospace' }}>{progress}%</div>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 4, height: 6, overflow: 'hidden', marginBottom: 14 }}>
+              <div style={{
+                width: `${progress}%`, height: '100%', borderRadius: 4,
+                background: 'linear-gradient(90deg,#22c55e,#16a34a)',
+                transition: 'width 0.2s'
+              }} />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <InfoChip label="Patient" value={patientName || 'Unknown'} />
+              <InfoChip label="GPS Source" value={gpsMode === 'real' ? '🛰 Real Hardware' : '⏱ Simulated'} />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ color: '#94a3b8', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, fontWeight: 700 }}>Route Instructions</div>
+            {[
+              { step: '1', txt: 'Exit depot, turn left on main avenue', at: 10 },
+              { step: '2', txt: 'Continue past central traffic circle', at: 60 },
+              { step: '3', txt: 'Turn right to patient rescue point', at: 100 },
+            ].map(({ step, txt, at }) => (
+              <div key={step} style={{
+                display: 'flex', gap: 12, alignItems: 'center',
+                padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                opacity: gpsMode === 'simulated' && progress >= at ? 0.35 : 1,
+                transition: 'opacity 0.2s'
+              }}>
+                <div style={{
+                  width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                  background: gpsMode === 'simulated' && progress >= at ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: gpsMode === 'simulated' && progress >= at ? '#22c55e' : '#93c5fd',
+                  fontSize: 10, fontWeight: 800, border: `1px solid ${gpsMode === 'simulated' && progress >= at ? 'rgba(34,197,94,0.3)' : 'rgba(59,130,246,0.3)'}`
+                }}>{gpsMode === 'simulated' && progress >= at ? '✓' : step}</div>
+                <span style={{
+                  color: gpsMode === 'simulated' && progress >= at ? '#475569' : '#e2e8f0',
+                  fontSize: 12,
+                  textDecoration: gpsMode === 'simulated' && progress >= at ? 'line-through' : 'none',
+                  fontWeight: 500
+                }}>{txt}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            {['simulated', 'real'].map(mode => (
+              <button key={mode} onClick={() => setGpsMode(mode)} style={{
+                flex: 1, padding: '9px 0', borderRadius: 10, fontSize: 10, fontWeight: 700,
+                textTransform: 'uppercase', letterSpacing: 1, cursor: 'pointer',
+                border: gpsMode === mode ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.08)',
+                background: gpsMode === mode ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)',
+                color: gpsMode === mode ? '#93c5fd' : '#64748b',
+                transition: 'all 0.2s'
+              }}>
+                {mode === 'simulated' ? '⏱ Simulated' : '🛰 Real GPS'}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handlePatientReached}
+            disabled={(gpsMode === 'simulated' && progress < 100) || fetchingHospitals}
+            style={{
+              width: '100%', padding: '15px 0', borderRadius: 12, fontSize: 13,
+              fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.2,
+              background: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals
+                ? 'linear-gradient(135deg,#059669,#047857)'
+                : 'rgba(255,255,255,0.05)',
+              color: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals ? '#fff' : '#475569',
+              border: 'none',
+              cursor: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals ? 'pointer' : 'not-allowed',
+              boxShadow: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals ? '0 5px 15px rgba(5,150,105,0.35)' : 'none',
+              transition: 'all 0.2s'
+            }}
+          >
+            {fetchingHospitals ? '🔍 Querying nearby clinics…' :
+             gpsMode === 'simulated' && progress < 100 ? `Transit Progress: ${progress}%` :
+             '📍 Patient Reached · Choose Hospital'}
+          </button>
+        </div>
+      );
+    }
+
+    if (phase === 4) {
+      return (
+        <div>
+          <div style={{
+            background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.25)',
+            borderRadius: 14, padding: 16, marginBottom: 16
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 24, animation: 'pulse-dot 1.5s infinite' }}>🏥</span>
+              <div>
+                <div style={{ color: '#93c5fd', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 700 }}>Emergency Transit</div>
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: 16 }}>Transport to Hospital</div>
+              </div>
+              <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                <div style={{ color: '#93c5fd', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Progress</div>
+                <div style={{ color: '#60a5fa', fontWeight: 800, fontSize: 18, fontFamily: 'monospace' }}>{progress}%</div>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 4, height: 6, overflow: 'hidden', marginBottom: 14 }}>
+              <div style={{
+                width: `${progress}%`, height: '100%', borderRadius: 4,
+                background: 'linear-gradient(90deg,#3b82f6,#1d4ed8)',
+                transition: 'width 0.2s'
+              }} />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <InfoChip label="Destination" value={selectedHospital?.name || 'Trauma Centre'} />
+              <InfoChip label="GPS Source" value={gpsMode === 'real' ? '🛰 Real Hardware' : '⏱ Simulated'} />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ color: '#94a3b8', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, fontWeight: 700 }}>Route Instructions</div>
+            {[
+              { step: '1', txt: 'Head east on patient local access road', at: 20 },
+              { step: '2', txt: 'Merge onto high-speed expressway lanes', at: 70 },
+              { step: '3', txt: 'Pull into hospital emergency entrance bay', at: 100 },
+            ].map(({ step, txt, at }) => (
+              <div key={step} style={{
+                display: 'flex', gap: 12, alignItems: 'center',
+                padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                opacity: gpsMode === 'simulated' && progress >= at ? 0.35 : 1,
+                transition: 'opacity 0.2s'
+              }}>
+                <div style={{
+                  width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                  background: gpsMode === 'simulated' && progress >= at ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: gpsMode === 'simulated' && progress >= at ? '#3b82f6' : '#93c5fd',
+                  fontSize: 10, fontWeight: 800, border: `1px solid ${gpsMode === 'simulated' && progress >= at ? 'rgba(59,130,246,0.3)' : 'rgba(59,130,246,0.3)'}`
+                }}>{gpsMode === 'simulated' && progress >= at ? '✓' : step}</div>
+                <span style={{
+                  color: gpsMode === 'simulated' && progress >= at ? '#475569' : '#e2e8f0',
+                  fontSize: 12,
+                  textDecoration: gpsMode === 'simulated' && progress >= at ? 'line-through' : 'none',
+                  fontWeight: 500
+                }}>{txt}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            {['simulated', 'real'].map(mode => (
+              <button key={mode} onClick={() => setGpsMode(mode)} style={{
+                flex: 1, padding: '9px 0', borderRadius: 10, fontSize: 10, fontWeight: 700,
+                textTransform: 'uppercase', letterSpacing: 1, cursor: 'pointer',
+                border: gpsMode === mode ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.08)',
+                background: gpsMode === mode ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)',
+                color: gpsMode === mode ? '#93c5fd' : '#64748b',
+                transition: 'all 0.2s'
+              }}>
+                {mode === 'simulated' ? '⏱ Simulated' : '🛰 Real GPS'}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={completeHandover}
+            disabled={gpsMode === 'simulated' && progress < 100}
+            style={{
+              width: '100%', padding: '15px 0', borderRadius: 12, fontSize: 13,
+              fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.2,
+              background: gpsMode === 'real' || progress >= 100
+                ? 'linear-gradient(135deg,#2563eb,#1d4ed8)'
+                : 'rgba(255,255,255,0.05)',
+              color: gpsMode === 'real' || progress >= 100 ? '#fff' : '#475569',
+              border: 'none',
+              cursor: gpsMode === 'real' || progress >= 100 ? 'pointer' : 'not-allowed',
+              boxShadow: gpsMode === 'real' || progress >= 100 ? '0 5px 15px rgba(37,99,235,0.35)' : 'none',
+              transition: 'all 0.2s'
+            }}
+          >
+            {gpsMode === 'simulated' && progress < 100 ? `Transporting: ${progress}%` : '🏥 Handover Completed ✓'}
+          </button>
+        </div>
+      );
+    }
+
+    if (phase === 5) {
+      return (
+        <div style={{ textAlign: 'center', padding: '10px 0' }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: '50%',
+            background: 'rgba(34,197,94,0.1)', border: '1.5px solid rgba(34,197,94,0.3)',
+            margin: '0 auto 16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32,
+            color: '#4ade80', boxShadow: '0 4px 14px rgba(34,197,94,0.2)'
+          }}>✓</div>
+          <div style={{ color: '#fff', fontWeight: 800, fontSize: 18, marginBottom: 6 }}>Mission Completed</div>
+          <div style={{ color: '#64748b', fontSize: 12, marginBottom: 24 }}>
+            Patient safely handed over · {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+          <button
+            onClick={cancelSOS}
+            style={{
+              width: '100%', padding: '15px 0', borderRadius: 12, fontSize: 13,
+              fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.2,
+              background: 'linear-gradient(135deg,#1e40af,#1d4ed8)',
+              color: '#fff', border: 'none', cursor: 'pointer',
+              boxShadow: '0 4px 15px rgba(37,99,235,0.3)',
+              transition: 'all 0.2s'
+            }}
+          >
+            Return to Standby
+          </button>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: '#0f172a' }}>
 
-      {/* ── Full-screen Map ───────────────────────────────────────────── */}
+      {/* ── Map / Standby Placeholder Container ───────────────────── */}
       <div style={{ position: 'absolute', inset: 0 }}>
         {isActive ? (
           <LiveMap
@@ -204,396 +619,152 @@ export default function ViewEDriver() {
             patientName={patientName}
             phase={phase}
             sosState={sosState}
-            bottomPadding={Math.round(window.innerHeight * 0.52)}
+            bottomPadding={bottomPaddingValue}
+            leftPadding={leftPaddingValue}
           />
         ) : (
           /* Standby placeholder */
           <div style={{
             height: '100%', display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', gap: 12,
+            alignItems: 'center', justifyContent: 'center', gap: 16,
             background: 'linear-gradient(160deg,#0f172a 0%,#1e293b 100%)'
           }}>
-            <span style={{ fontSize: 56 }}>📡</span>
-            <p style={{ color: '#64748b', fontSize: 13, textAlign: 'center', maxWidth: 260, lineHeight: 1.6 }}>
-              Radar active — awaiting emergency broadcast signal from dispatch centre
+            <div className="relative flex items-center justify-center">
+              <span style={{ fontSize: 64, animation: 'pulse-ping 2s infinite' }}>📡</span>
+            </div>
+            <p style={{ color: '#94a3b8', fontSize: 14, fontWeight: 500, textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
+              ArogyaFlow Dispatch Grid Active
+            </p>
+            <p style={{ color: '#64748b', fontSize: 12, textAlign: 'center', maxWidth: 260, lineHeight: 1.6, marginTop: -8 }}>
+              Monitoring emergency broadcast frequencies...
             </p>
           </div>
         )}
       </div>
 
-      {/* ── Top Status Bar ───────────────────────────────────────────── */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0,
-        background: 'rgba(15,23,42,0.82)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        padding: '12px 16px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        zIndex: 50
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{
-            width: 10, height: 10, borderRadius: '50%',
-            background: statusColor,
-            boxShadow: `0 0 8px ${statusColor}`,
-            flexShrink: 0,
-            animation: isMatching ? 'pulse-dot 1s infinite' : 'none'
-          }} />
-          <span style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 13 }}>{statusText}</span>
-        </div>
-
-        {isActive && (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{
-              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 8, padding: '4px 10px', textAlign: 'center'
-            }}>
-              <div style={{ color: '#94a3b8', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Timer</div>
-              <div style={{ color: '#f97316', fontWeight: 800, fontSize: 13, fontFamily: 'monospace' }}>{formatTime(countdown)}</div>
+      {/* ─────────────── DESKTOP SIDEBAR LAYOUT (>= 768px) ─────────────── */}
+      {isLargeScreen && (
+        <div style={{
+          position: 'absolute',
+          top: '20px',
+          left: '20px',
+          bottom: '20px',
+          width: '380px',
+          background: 'rgba(15, 23, 42, 0.94)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          borderRadius: '16px',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+          zIndex: 50,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}>
+          {/* Sidebar Header */}
+          <div style={{
+            padding: '16px 20px',
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            background: 'rgba(30,41,59,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{
+                width: 10, height: 10, borderRadius: '50%',
+                background: statusColor,
+                boxShadow: `0 0 10px ${statusColor}`,
+                flexShrink: 0,
+                animation: isMatching ? 'pulse-dot 1s infinite' : 'none'
+              }} />
+              <span style={{ color: '#f1f5f9', fontWeight: 800, fontSize: 14, tracking: 'wide' }}>{statusText}</span>
             </div>
-            {inTransit && (
+            {isActive && (
               <div style={{
-                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 8, padding: '4px 10px', textAlign: 'center'
+                background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)',
+                borderRadius: 8, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6
               }}>
-                <div style={{ color: '#94a3b8', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Progress</div>
-                <div style={{ color: '#22c55e', fontWeight: 800, fontSize: 13, fontFamily: 'monospace' }}>{progress}%</div>
+                <span style={{ color: '#f97316', fontSize: 10, fontWeight: 700, fontFamily: 'monospace' }}>⏱ {formatTime(countdown)}</span>
               </div>
             )}
           </div>
-        )}
-      </div>
 
-      {/* ── Bottom Action Sheet ──────────────────────────────────────── */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        background: 'rgba(15,23,42,0.92)',
-        backdropFilter: 'blur(20px)',
-        borderTop: '1px solid rgba(255,255,255,0.10)',
-        borderRadius: '20px 20px 0 0',
-        padding: '20px 16px',
-        zIndex: 50,
-        maxHeight: '55vh',
-        overflowY: 'auto'
-      }}>
-        {/* Drag handle */}
-        <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2, margin: '0 auto 16px' }} />
-
-        {/* ── STANDBY STATE ── */}
-        {!isActive && (
-          <div style={{ textAlign: 'center', padding: '8px 0' }}>
-            <div style={{
-              width: 64, height: 64, borderRadius: '50%',
-              background: 'linear-gradient(135deg,#1e3a5f,#1d4ed8)',
-              margin: '0 auto 12px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28
-            }}>🚑</div>
-            <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 16, marginBottom: 6 }}>
-              {user?.name || user?.email?.split('@')[0] || 'Driver'}
-            </div>
-            <div style={{ color: '#64748b', fontSize: 12, marginBottom: 16 }}>
-              Vehicle: {user?.id ? `ALS-${user.id.substring(0, 4).toUpperCase()}` : 'ALS-XXXX'}
-            </div>
-            <div style={{
-              background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
-              borderRadius: 10, padding: '10px 16px', color: '#4ade80', fontSize: 12
-            }}>
-              ✓ Online · Ready for dispatch
-            </div>
+          {/* Sidebar Scrollable Content */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }} className="custom-scrollbar">
+            {renderConsoleContent()}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ── INCOMING SOS (matching) ── */}
-        {isMatching && (
-          <div>
-            {/* Pulsing alert */}
-            <div style={{
-              background: 'linear-gradient(135deg,rgba(220,38,38,0.2),rgba(239,68,68,0.1))',
-              border: '1px solid rgba(239,68,68,0.4)',
-              borderRadius: 14, padding: 16, marginBottom: 16,
-              animation: 'slide-up 0.3s ease'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <span style={{ fontSize: 22 }}>🚨</span>
-                <div>
-                  <div style={{ color: '#fca5a5', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Emergency Request</div>
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: 16 }}>NEW SOS ALERT</div>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <InfoChip label="Patient" value={patientName || 'Unknown'} />
-                <InfoChip label="Condition" value={symptom || 'Medical Emergency'} />
-                <InfoChip label="Distance" value="~1.8 km" />
-                <InfoChip label="ETA" value="~4 min" />
-              </div>
-
-              {sosLocation && (
-                <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
-                  <span style={{ color: '#94a3b8', fontSize: 10 }}>📍 </span>
-                  <span style={{ color: '#cbd5e1', fontSize: 11 }}>{sosLocation}</span>
-                </div>
-              )}
+      {/* ─────────────── MOBILE LAYOUT (< 768px) ─────────────── */}
+      {!isLargeScreen && (
+        <>
+          {/* Top Status Overlay */}
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0,
+            background: 'rgba(15,23,42,0.85)',
+            backdropFilter: 'blur(12px)',
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            padding: '12px 16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            zIndex: 50
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{
+                width: 10, height: 10, borderRadius: '50%',
+                background: statusColor,
+                boxShadow: `0 0 8px ${statusColor}`,
+                flexShrink: 0,
+                animation: isMatching ? 'pulse-dot 1s infinite' : 'none'
+              }} />
+              <span style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 13 }}>{statusText}</span>
             </div>
 
-            {/* GPS Mode toggle */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-              {['simulated', 'real'].map(mode => (
-                <button
-                  key={mode}
-                  onClick={() => setGpsMode(mode)}
-                  style={{
-                    flex: 1, padding: '8px 0', borderRadius: 10, fontSize: 11, fontWeight: 700,
-                    textTransform: 'uppercase', letterSpacing: 1, cursor: 'pointer',
-                    border: gpsMode === mode ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.1)',
-                    background: gpsMode === mode ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.04)',
-                    color: gpsMode === mode ? '#93c5fd' : '#64748b',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  {mode === 'simulated' ? '⏱ Simulate' : '🛰 Real GPS'}
-                </button>
-              ))}
-            </div>
-
-            {/* ACCEPT button */}
-            <button
-              onClick={handleAccept}
-              style={{
-                width: '100%', padding: '16px 0', borderRadius: 14, fontSize: 15,
-                fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5,
-                background: 'linear-gradient(135deg,#dc2626,#b91c1c)',
-                color: '#fff', border: 'none', cursor: 'pointer',
-                boxShadow: '0 4px 24px rgba(220,38,38,0.5)',
-                transition: 'transform 0.1s'
-              }}
-              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-              onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              ✅ Accept Ride
-            </button>
-          </div>
-        )}
-
-        {/* ── DISPATCHED / EN ROUTE TO PATIENT (phase 3) ── */}
-        {phase === 3 && (
-          <div>
-            <div style={{
-              background: 'rgba(5,150,105,0.1)', border: '1px solid rgba(5,150,105,0.3)',
-              borderRadius: 14, padding: 14, marginBottom: 14
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <span style={{ fontSize: 20 }}>🚑</span>
-                <div>
-                  <div style={{ color: '#6ee7b7', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>En Route</div>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>Heading to Patient</div>
-                </div>
-                <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                  <div style={{ color: '#6ee7b7', fontSize: 10 }}>Progress</div>
-                  <div style={{ color: '#22c55e', fontWeight: 800, fontSize: 18, fontFamily: 'monospace' }}>{progress}%</div>
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 4, height: 6, overflow: 'hidden' }}>
+            {isActive && (
+              <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{
-                  width: `${progress}%`, height: '100%', borderRadius: 4,
-                  background: 'linear-gradient(90deg,#22c55e,#16a34a)',
-                  transition: 'width 0.2s'
-                }} />
-              </div>
-
-              <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <InfoChip label="Patient" value={patientName || 'Unknown'} />
-                <InfoChip label="Mode" value={gpsMode === 'real' ? '🛰 GPS' : '⏱ Simulated'} />
-              </div>
-            </div>
-
-            {/* Turn-by-turn directions */}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ color: '#94a3b8', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Turn-by-Turn</div>
-              {[
-                { step: '1', txt: 'Exit depot, turn left on main avenue', at: 10 },
-                { step: '2', txt: 'Continue past central traffic circle', at: 60 },
-                { step: '3', txt: 'Turn right to patient rescue point', at: 100 },
-              ].map(({ step, txt, at }) => (
-                <div key={step} style={{
-                  display: 'flex', gap: 10, alignItems: 'center',
-                  padding: '7px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
-                  opacity: gpsMode === 'simulated' && progress >= at ? 0.35 : 1
+                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 8, padding: '4px 10px', textAlign: 'center'
                 }}>
+                  <div style={{ color: '#94a3b8', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Timer</div>
+                  <div style={{ color: '#f97316', fontWeight: 800, fontSize: 13, fontFamily: 'monospace' }}>{formatTime(countdown)}</div>
+                </div>
+                {inTransit && (
                   <div style={{
-                    width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-                    background: gpsMode === 'simulated' && progress >= at ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: gpsMode === 'simulated' && progress >= at ? '#22c55e' : '#93c5fd',
-                    fontSize: 10, fontWeight: 800
-                  }}>{gpsMode === 'simulated' && progress >= at ? '✓' : step}</div>
-                  <span style={{
-                    color: gpsMode === 'simulated' && progress >= at ? '#475569' : '#e2e8f0',
-                    fontSize: 12,
-                    textDecoration: gpsMode === 'simulated' && progress >= at ? 'line-through' : 'none'
-                  }}>{txt}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* GPS toggle + Arrived button */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              {['simulated', 'real'].map(mode => (
-                <button key={mode} onClick={() => setGpsMode(mode)} style={{
-                  flex: 1, padding: '7px 0', borderRadius: 10, fontSize: 10, fontWeight: 700,
-                  textTransform: 'uppercase', letterSpacing: 1, cursor: 'pointer',
-                  border: gpsMode === mode ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.1)',
-                  background: gpsMode === mode ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.04)',
-                  color: gpsMode === mode ? '#93c5fd' : '#64748b',
-                }}>
-                  {mode === 'simulated' ? '⏱ Sim' : '🛰 Real'}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={handlePatientReached}
-              disabled={(gpsMode === 'simulated' && progress < 100) || fetchingHospitals}
-              style={{
-                width: '100%', padding: '15px 0', borderRadius: 14, fontSize: 14,
-                fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1,
-                background: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals
-                  ? 'linear-gradient(135deg,#059669,#047857)'
-                  : 'rgba(255,255,255,0.06)',
-                color: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals ? '#fff' : '#475569',
-                border: 'none',
-                cursor: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals ? 'pointer' : 'not-allowed',
-                boxShadow: (gpsMode === 'real' || progress >= 100) && !fetchingHospitals ? '0 4px 20px rgba(5,150,105,0.45)' : 'none',
-              }}
-            >
-              {fetchingHospitals ? '🔍 Finding nearby hospitals…' :
-               gpsMode === 'simulated' && progress < 100 ? `Driving… ${progress}%` :
-               '📍 Patient Reached — Select Hospital'}
-            </button>
-          </div>
-        )}
-
-        {/* ── TRANSIT TO HOSPITAL (phase 4) ── */}
-        {phase === 4 && (
-          <div>
-            <div style={{
-              background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.3)',
-              borderRadius: 14, padding: 14, marginBottom: 14
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <span style={{ fontSize: 20 }}>🏥</span>
-                <div>
-                  <div style={{ color: '#93c5fd', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Patient On Board</div>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>Transit to Hospital</div>
-                </div>
-                <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                  <div style={{ color: '#93c5fd', fontSize: 10 }}>Progress</div>
-                  <div style={{ color: '#60a5fa', fontWeight: 800, fontSize: 18, fontFamily: 'monospace' }}>{progress}%</div>
-                </div>
+                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: 8, padding: '4px 10px', textAlign: 'center'
+                  }}>
+                    <div style={{ color: '#94a3b8', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>Progress</div>
+                    <div style={{ color: '#22c55e', fontWeight: 800, fontSize: 13, fontFamily: 'monospace' }}>{progress}%</div>
+                  </div>
+                )}
               </div>
-
-              <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 4, height: 6, overflow: 'hidden' }}>
-                <div style={{
-                  width: `${progress}%`, height: '100%', borderRadius: 4,
-                  background: 'linear-gradient(90deg,#3b82f6,#1d4ed8)', transition: 'width 0.2s'
-                }} />
-              </div>
-
-              <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <InfoChip label="Hospital" value={selectedHospital?.name || 'Trauma Centre'} />
-                <InfoChip label="Mode" value={gpsMode === 'real' ? '🛰 GPS' : '⏱ Simulated'} />
-              </div>
-            </div>
-
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ color: '#94a3b8', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Turn-by-Turn</div>
-              {[
-                { step: '1', txt: 'Head east on patient local access road', at: 20 },
-                { step: '2', txt: 'Merge onto high-speed expressway lanes', at: 70 },
-                { step: '3', txt: 'Pull into hospital emergency entrance bay', at: 100 },
-              ].map(({ step, txt, at }) => (
-                <div key={step} style={{
-                  display: 'flex', gap: 10, alignItems: 'center',
-                  padding: '7px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
-                  opacity: gpsMode === 'simulated' && progress >= at ? 0.35 : 1
-                }}>
-                  <div style={{
-                    width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-                    background: gpsMode === 'simulated' && progress >= at ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: gpsMode === 'simulated' && progress >= at ? '#3b82f6' : '#93c5fd',
-                    fontSize: 10, fontWeight: 800
-                  }}>{gpsMode === 'simulated' && progress >= at ? '✓' : step}</div>
-                  <span style={{
-                    color: gpsMode === 'simulated' && progress >= at ? '#475569' : '#e2e8f0',
-                    fontSize: 12,
-                    textDecoration: gpsMode === 'simulated' && progress >= at ? 'line-through' : 'none'
-                  }}>{txt}</span>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              {['simulated', 'real'].map(mode => (
-                <button key={mode} onClick={() => setGpsMode(mode)} style={{
-                  flex: 1, padding: '7px 0', borderRadius: 10, fontSize: 10, fontWeight: 700,
-                  textTransform: 'uppercase', letterSpacing: 1, cursor: 'pointer',
-                  border: gpsMode === mode ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.1)',
-                  background: gpsMode === mode ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.04)',
-                  color: gpsMode === mode ? '#93c5fd' : '#64748b',
-                }}>
-                  {mode === 'simulated' ? '⏱ Sim' : '🛰 Real'}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={completeHandover}
-              disabled={gpsMode === 'simulated' && progress < 100}
-              style={{
-                width: '100%', padding: '15px 0', borderRadius: 14, fontSize: 14,
-                fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1,
-                background: gpsMode === 'real' || progress >= 100
-                  ? 'linear-gradient(135deg,#2563eb,#1d4ed8)'
-                  : 'rgba(255,255,255,0.06)',
-                color: gpsMode === 'real' || progress >= 100 ? '#fff' : '#475569',
-                border: 'none',
-                cursor: gpsMode === 'real' || progress >= 100 ? 'pointer' : 'not-allowed',
-                boxShadow: gpsMode === 'real' || progress >= 100 ? '0 4px 20px rgba(37,99,235,0.45)' : 'none',
-              }}
-            >
-              {gpsMode === 'simulated' && progress < 100 ? `Transporting… ${progress}%` : '🏥 Handover Complete ✓'}
-            </button>
+            )}
           </div>
-        )}
 
-        {/* ── HANDOVER COMPLETE (phase 5) ── */}
-        {phase === 5 && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
-            <div style={{ color: '#fff', fontWeight: 800, fontSize: 18, marginBottom: 6 }}>Mission Complete</div>
-            <div style={{ color: '#64748b', fontSize: 12, marginBottom: 20 }}>
-              Patient handed over · {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </div>
-            <button
-              onClick={cancelSOS}
-              style={{
-                width: '100%', padding: '15px 0', borderRadius: 14, fontSize: 14,
-                fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1,
-                background: 'linear-gradient(135deg,#1e40af,#1d4ed8)',
-                color: '#fff', border: 'none', cursor: 'pointer',
-                boxShadow: '0 4px 20px rgba(37,99,235,0.4)'
-              }}
-            >
-              Return to Standby
-            </button>
+          {/* Bottom Action Sheet */}
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            background: 'rgba(15,23,42,0.94)',
+            backdropFilter: 'blur(20px)',
+            borderTop: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '20px 20px 0 0',
+            padding: '16px 16px 24px 16px',
+            zIndex: 50,
+            maxHeight: '55vh',
+            overflowY: 'auto',
+            boxShadow: '0 -10px 30px rgba(0,0,0,0.5)',
+            transition: 'transform 0.3s ease-out'
+          }}>
+            {/* Drag Handle */}
+            <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2, margin: '0 auto 16px' }} />
+            {renderConsoleContent()}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
-      {/* Keyframes */}
+      {/* Styles */}
       <style>{`
         @keyframes pulse-dot {
           0%, 100% { opacity: 1; transform: scale(1); }
@@ -603,79 +774,24 @@ export default function ViewEDriver() {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes pulse-ping {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.08); opacity: 0.85; }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.15);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255,255,255,0.3);
+        }
       `}</style>
-
-      {/* ── Hospital Picker Overlay ───────────────────────────────────── */}
-      {showHospitalPicker && (
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 200,
-          background: 'rgba(0,0,0,0.7)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'
-        }}>
-          <div style={{
-            background: 'rgba(15,23,42,0.98)',
-            borderTop: '1px solid rgba(255,255,255,0.12)',
-            borderRadius: '20px 20px 0 0',
-            padding: '20px 16px 32px',
-            maxHeight: '80vh', overflowY: 'auto',
-            animation: 'slide-up 0.3s ease'
-          }}>
-            <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '0 auto 16px' }} />
-            <div style={{ color: '#f1f5f9', fontWeight: 800, fontSize: 16, marginBottom: 4 }}>🏥 Select Nearest Hospital</div>
-            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 16 }}>Real hospitals near patient's location (OpenStreetMap)</div>
-
-            {nearbyHospitals.length === 0 ? (
-              <div style={{ color: '#64748b', textAlign: 'center', padding: '24px 0' }}>
-                No hospitals found nearby. Proceeding with default.
-              </div>
-            ) : nearbyHospitals.map((h, i) => {
-              const distKm = (Math.hypot(
-                (h.lat - (patientLat || 28.6139)) * 111,
-                (h.lng - (patientLng || 77.209)) * 111 * Math.cos((patientLat || 28.6139) * Math.PI / 180)
-              )).toFixed(1);
-              return (
-                <button
-                  key={h.id}
-                  onClick={() => handleSelectHospital({ ...h, distance: `${distKm} km` })}
-                  style={{
-                    width: '100%', marginBottom: 10, padding: '14px',
-                    borderRadius: 14, textAlign: 'left', cursor: 'pointer',
-                    background: i === 0 ? 'rgba(5,150,105,0.12)' : 'rgba(255,255,255,0.04)',
-                    border: `1.5px solid ${i === 0 ? 'rgba(5,150,105,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 22 }}>🏥</span>
-                      <div>
-                        <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 13 }}>{h.name}</div>
-                        <div style={{ color: '#64748b', fontSize: 10, marginTop: 2 }}>
-                          {h.emergency ? '🚨 Emergency Unit · ' : ''}{h.type}
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ color: i === 0 ? '#4ade80' : '#94a3b8', fontWeight: 700, fontSize: 13 }}>{distKm} km</div>
-                      {i === 0 && <div style={{ color: '#4ade80', fontSize: 9 }}>NEAREST</div>}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-
-            <button
-              onClick={() => setShowHospitalPicker(false)}
-              style={{
-                width: '100%', marginTop: 6, padding: '12px 0', borderRadius: 12,
-                background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)',
-                color: '#fca5a5', fontSize: 12, fontWeight: 700, cursor: 'pointer'
-              }}
-            >Cancel</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -684,11 +800,11 @@ export default function ViewEDriver() {
 function InfoChip({ label, value }) {
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)',
-      borderRadius: 8, padding: '6px 10px'
+      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 10, padding: '8px 12px'
     }}>
-      <div style={{ color: '#94a3b8', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</div>
-      <div style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 11, marginTop: 1 }}>{value}</div>
+      <div style={{ color: '#94a3b8', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 700 }}>{label}</div>
+      <div style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 12, marginTop: 2 }}>{value}</div>
     </div>
   );
 }
