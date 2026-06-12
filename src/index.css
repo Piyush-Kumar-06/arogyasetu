@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-authority: #1A365D;
+  --color-flow: #2B6CB0;
+  --color-transit: #319795;
+  --color-canvas: #FFFFFF;
+  --color-field: #F7FAFC;
+  --color-signal: #3182CE;
+  --color-critical: #E53E3E;
+  --color-muted: #718096;
+
+  --font-sans: 'Inter', 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-field);
+  color: #1A202C;
+  font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Custom styles and animations */
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+}
+
+.pulse-active {
+  animation: pulse-subtle 2s infinite ease-in-out;
+}
+
+/* Progress ring styles for countdown */
+.progress-ring__circle {
+  transition: stroke-dashoffset 0.35s;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Google Translate Styling Customizations */
+#google_translate_element select {
+  background-color: #2B6CB0 !important; /* matches --color-flow */
+  color: white !important;
+  border: 1px solid #075985 !important; /* sky-800 */
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  outline: none !important;
+  cursor: pointer !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+#google_translate_element select option {
+  background-color: #1A365D !important;
+  color: white !important;
+}
+
+.goog-logo-link, .goog-te-gadget span {
+  display: none !important; /* Hide Google logos and 'Select Language' label */
+}
+
+.goog-te-gadget {
+  font-size: 0 !important; /* Collapse unwanted text spacing */
+  line-height: normal !important;
+}
+
+/* Hide top translate banner and fix html/body position shift */
+iframe,
+.goog-te-banner-frame.skiptranslate,
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame,
+iframe[class*="goog"],
+iframe[class*="VIpgJd"],
+iframe[id*="goog"],
+iframe[id*="VIpgJd"],
+iframe[src*="translate.google.com"],
+#goog-gt-tt,
+.goog-te-balloon-frame {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Force elements back to top to prevent page push-down */
+html, body {
+  top: 0px !important;
+  margin-top: 0px !important;
+  padding-top: 0px !important;
+}
+
+/* Keep Leaflet controls below driver floating UI (z-index: 50) */
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 40 !important;
+}
+.leaflet-pane {
+  z-index: 30 !important;
+}
+.leaflet-control {
+  z-index: 40 !important;
+}
+
