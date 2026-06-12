@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState } from 'react';
 import { QueueContext } from '../context/QueueContext';
 import { EmergencyContext } from '../context/EmergencyContext';
 import { AuthContext } from '../context/AuthContext';
@@ -7,23 +7,12 @@ import ProgressRing from '../components/ProgressRing';
 import { generatePrescriptionPdf } from '../utils/prescriptionPdf';
 
 export default function ViewAPatient() {
-  const { queueSnapshot, privacyGranted, togglePrivacy, checkInPatient, updatePatientProfile } = useContext(QueueContext);
+  const { queueSnapshot, privacyGranted, togglePrivacy, checkInPatient } = useContext(QueueContext);
   const { startSOS, sosState } = useContext(EmergencyContext);
   const { user } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('general');
   const [sosLoading, setSosLoading] = useState(false);
   const [sosStatusMsg, setSosStatusMsg] = useState('');
-
-  // Slide-over Drawer & Profile edit states
-  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
-  const [editAge, setEditAge] = useState('');
-  const [editBloodGroup, setEditBloodGroup] = useState('O+');
-  const [editDOB, setEditDOB] = useState('');
-  const [editEmergencyContact, setEditEmergencyContact] = useState('');
-  const [editKnownAllergies, setEditKnownAllergies] = useState('');
-  const [editInsuranceID, setEditInsuranceID] = useState('');
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
 
   // Form states for checking in
   const [age, setAge] = useState('');
@@ -122,40 +111,6 @@ export default function ViewAPatient() {
     } finally {
       setSosLoading(false);
       setSosStatusMsg('');
-    }
-  };
-
-  // Sync profile data to edit states
-  useEffect(() => {
-    if (patientData) {
-      setEditAge(patientData.age || '');
-      setEditBloodGroup(patientData.bloodGroup || 'O+');
-      setEditDOB(patientData.medicalVault?.general?.['DOB'] || '');
-      setEditEmergencyContact(patientData.medicalVault?.general?.['Emergency Contact'] || '');
-      setEditKnownAllergies(patientData.medicalVault?.general?.['Known Allergies'] || '');
-      setEditInsuranceID(patientData.medicalVault?.general?.['Insurance ID'] || '');
-    }
-  }, [patientData]);
-
-  const handleSaveProfile = async (e) => {
-    e.preventDefault();
-    setIsSavingProfile(true);
-    setSaveSuccessMsg('');
-    try {
-      await updatePatientProfile(patientData.id, {
-        age: editAge,
-        bloodGroup: editBloodGroup,
-        DOB: editDOB,
-        emergencyContact: editEmergencyContact,
-        knownAllergies: editKnownAllergies,
-        insuranceID: editInsuranceID
-      });
-      setSaveSuccessMsg('Profile updated successfully!');
-      setTimeout(() => setSaveSuccessMsg(''), 3000);
-    } catch (err) {
-      console.error('Save profile failed:', err);
-    } finally {
-      setIsSavingProfile(false);
     }
   };
 
@@ -310,7 +265,7 @@ export default function ViewAPatient() {
           </div>
         </div>
 
-        <div className="flex items-center space-x-4 md:space-x-6">
+        <div className="flex items-center space-x-6">
           <div className="text-right">
             <span className="text-[10px] uppercase tracking-widest text-[#718096] block">Est. Wait Time</span>
             <span className="font-mono text-lg font-bold text-[#1A365D]">{patientData.waitDuration} mins</span>
@@ -319,20 +274,6 @@ export default function ViewAPatient() {
             <span className="text-[10px] uppercase tracking-widest text-[#718096] block">Patients Ahead</span>
             <span className="font-mono text-lg font-bold text-[#1A365D]">{patientsAhead}</span>
           </div>
-
-          <div className="h-8 w-[1px] bg-gray-200" />
-
-          {/* Hamburger Menu / Profile Trigger */}
-          <button
-            onClick={() => setIsProfileDrawerOpen(true)}
-            className="bg-[#1A365D] hover:bg-[#2B6CB0] text-white p-2 md:p-2.5 rounded-md transition-colors cursor-pointer flex items-center justify-center border border-sky-800 shadow-sm shrink-0"
-            title="Open Profile Drawer"
-          >
-            <span className="text-xs mr-2 font-bold uppercase tracking-wider hidden sm:inline">Profile</span>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
-          </button>
         </div>
       </div>
 
@@ -579,237 +520,6 @@ export default function ViewAPatient() {
           </span>
         </button>
       </div>
-
-      {/* Slide-over Profile Settings & Info Drawer */}
-      {isProfileDrawerOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
-          <div className="absolute inset-0 overflow-hidden">
-            {/* Backdrop overlay */}
-            <div 
-              onClick={() => setIsProfileDrawerOpen(false)}
-              className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity cursor-pointer" 
-            />
-
-            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-              <div className="pointer-events-auto w-screen max-w-md transform bg-white shadow-2xl transition-all duration-300 ease-in-out flex flex-col h-full animate-in slide-in-from-right">
-                
-                {/* Drawer Header */}
-                <div className="bg-[#1A365D] px-6 py-5 flex justify-between items-center text-white shrink-0">
-                  <div className="flex items-center space-x-2.5">
-                    <span className="text-xl">👤</span>
-                    <div>
-                      <h2 className="font-bold text-sm tracking-wide uppercase" id="slide-over-title">
-                        Patient Profile Command
-                      </h2>
-                      <p className="text-[10px] text-sky-200 uppercase tracking-wider">Configure your clinical records</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setIsProfileDrawerOpen(false)}
-                    className="text-white/80 hover:text-white text-lg font-bold transition-colors w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                {/* Drawer Body Scroll */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                  {/* Status Summary & QR */}
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col items-center text-center shadow-sm">
-                    <div className="relative mb-3 p-2.5 bg-white border border-[#1A365D] rounded-lg shadow-sm">
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=8&data=arogyaflow:consent:${patientData.id}`}
-                        alt="Profile QR Code"
-                        className="w-32 h-32 notranslate"
-                        translate="no"
-                      />
-                      <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 bg-[#1A365D] text-white text-[8px] font-bold px-2 py-0.5 rounded-full tracking-widest uppercase">
-                        ArogyaFlow
-                      </div>
-                    </div>
-                    <h3 className="font-bold text-slate-800 text-sm">{patientData.name}</h3>
-                    <p className="font-mono text-xs text-sky-700 font-semibold mt-0.5">{patientData.token}</p>
-                    
-                    <div className="mt-4 w-full">
-                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold block uppercase tracking-wider border ${
-                        privacyGranted
-                          ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                          : 'bg-amber-50 border-amber-200 text-amber-700'
-                      }`}>
-                        {privacyGranted ? '✅ Doctor Consent Active' : '🔒 Awaiting Doctor QR Scan'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Profile Edit Form */}
-                  <form onSubmit={handleSaveProfile} className="space-y-4">
-                    <h3 className="text-xs uppercase tracking-widest text-[#718096] font-bold border-b border-gray-150 pb-2">
-                      Edit Personal & Medical Info
-                    </h3>
-
-                    {saveSuccessMsg && (
-                      <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold px-3 py-2.5 rounded-md flex items-center space-x-2">
-                        <span>✅</span>
-                        <span>{saveSuccessMsg}</span>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-[10px] uppercase tracking-widest text-[#718096] font-bold block mb-1">
-                          Age (Years)
-                        </label>
-                        <input
-                          type="number"
-                          required
-                          min="1"
-                          max="120"
-                          value={editAge}
-                          onChange={(e) => setEditAge(e.target.value)}
-                          className="w-full border border-gray-250 bg-[#F7FAFC] rounded-md px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#3182CE]"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] uppercase tracking-widest text-[#718096] font-bold block mb-1">
-                          Blood Group
-                        </label>
-                        <select
-                          value={editBloodGroup}
-                          onChange={(e) => setEditBloodGroup(e.target.value)}
-                          className="w-full border border-gray-250 bg-[#F7FAFC] rounded-md px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#3182CE] cursor-pointer"
-                        >
-                          {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
-                            <option key={bg} value={bg}>{bg}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] uppercase tracking-widest text-[#718096] font-bold block mb-1">
-                        Date of Birth (DOB)
-                      </label>
-                      <input
-                        type="date"
-                        value={editDOB}
-                        onChange={(e) => setEditDOB(e.target.value)}
-                        className="w-full border border-gray-250 bg-[#F7FAFC] rounded-md px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#3182CE]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] uppercase tracking-widest text-[#718096] font-bold block mb-1">
-                        Known Allergies
-                      </label>
-                      <input
-                        type="text"
-                        value={editKnownAllergies}
-                        onChange={(e) => setEditKnownAllergies(e.target.value)}
-                        placeholder="e.g. Penicillin, Pollen"
-                        className="w-full border border-gray-250 bg-[#F7FAFC] rounded-md px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#3182CE]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] uppercase tracking-widest text-[#718096] font-bold block mb-1">
-                        Emergency Contact
-                      </label>
-                      <input
-                        type="text"
-                        value={editEmergencyContact}
-                        onChange={(e) => setEditEmergencyContact(e.target.value)}
-                        placeholder="e.g. Spouse (+91 XXXXX XXXXX)"
-                        className="w-full border border-gray-250 bg-[#F7FAFC] rounded-md px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#3182CE]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] uppercase tracking-widest text-[#718096] font-bold block mb-1">
-                        Insurance ID
-                      </label>
-                      <input
-                        type="text"
-                        value={editInsuranceID}
-                        onChange={(e) => setEditInsuranceID(e.target.value)}
-                        placeholder="e.g. INSR-12345"
-                        className="w-full border border-gray-250 bg-[#F7FAFC] rounded-md px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#3182CE]"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSavingProfile}
-                      className="w-full bg-[#1A365D] hover:bg-[#2B6CB0] text-white font-bold py-2.5 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-md cursor-pointer flex items-center justify-center space-x-2"
-                    >
-                      {isSavingProfile ? (
-                        <>
-                          <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
-                          <span>Saving Changes...</span>
-                        </>
-                      ) : (
-                        <span>Save Profile Updates →</span>
-                      )}
-                    </button>
-                  </form>
-
-                  {/* Actions Area */}
-                  <div className="space-y-3 pt-4 border-t border-gray-150">
-                    <h3 className="text-xs uppercase tracking-widest text-[#718096] font-bold mb-2">
-                      Access & Emergency Settings
-                    </h3>
-                    
-                    <button
-                      type="button"
-                      onClick={() => togglePrivacy(patientData.id)}
-                      className={`w-full flex items-center justify-center space-x-2 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors border cursor-pointer ${
-                        privacyGranted
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                          : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-                      }`}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        {privacyGranted ? (
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h16.5a1.5 1.5 0 001.5-1.5V10.5a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 10.5v9.75a1.5 1.5 0 001.5 1.5z" />
-                        ) : (
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                        )}
-                      </svg>
-                      <span>{privacyGranted ? 'Revoke Doctor Consent' : 'Grant Doctor Consent'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsProfileDrawerOpen(false);
-                        handleSOS();
-                      }}
-                      disabled={sosLoading || sosState !== 'inactive'}
-                      className={`w-full flex items-center justify-center space-x-2 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer ${
-                        sosState !== 'inactive'
-                          ? 'bg-amber-500 text-white cursor-not-allowed'
-                          : 'bg-[#E53E3E] hover:bg-red-700 text-white'
-                      }`}
-                    >
-                      <span>🚨</span>
-                      <span>{sosState !== 'inactive' ? 'SOS Mode Active' : 'Trigger Emergency SOS'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Footer details */}
-                <div className="p-4 bg-slate-50 border-t border-gray-100 text-center shrink-0">
-                  <p className="text-[9px] font-mono text-[#718096] uppercase tracking-wider">
-                    ArogyaFlow Privacy Compliance Vault • HIPAA Secured
-                  </p>
-                </div>
-
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
     </div>
   );
 }
