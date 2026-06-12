@@ -42,18 +42,18 @@ export default function ViewEDriver() {
   const [showHospitalPicker, setShowHospitalPicker] = useState(false);
   const [fetchingHospitals, setFetchingHospitals] = useState(false);
 
-  // Collapsible bottom sheet states
-  const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
+  // Collapsible bottom sheet states: 'expanded' | 'collapsed' | 'minimized'
+  const [sheetState, setSheetState] = useState('expanded');
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
 
   const startYRef = React.useRef(0);
-  const isSheetCollapsedRef = React.useRef(isSheetCollapsed);
+  const sheetStateRef = React.useRef(sheetState);
   const dragOccurredRef = React.useRef(false);
 
   useEffect(() => {
-    isSheetCollapsedRef.current = isSheetCollapsed;
-  }, [isSheetCollapsed]);
+    sheetStateRef.current = sheetState;
+  }, [sheetState]);
 
   const handleDragStart = (clientY) => {
     setIsDragging(true);
@@ -67,12 +67,15 @@ export default function ViewEDriver() {
     if (Math.abs(deltaY) > 5) {
       dragOccurredRef.current = true;
     }
-    if (isSheetCollapsedRef.current) {
-      // Collapsed: only allow dragging UP (negative deltaY)
+    if (sheetStateRef.current === 'minimized') {
+      // Collapsed to handle only: only allow dragging UP (negative deltaY)
       setDragOffset(Math.min(0, deltaY));
-    } else {
-      // Expanded: only allow dragging DOWN (positive deltaY)
+    } else if (sheetStateRef.current === 'expanded') {
+      // Fully open: only allow dragging DOWN (positive deltaY)
       setDragOffset(Math.max(0, deltaY));
+    } else {
+      // Collapsed to mid-height: allow dragging both ways
+      setDragOffset(deltaY);
     }
   };
 
@@ -82,13 +85,21 @@ export default function ViewEDriver() {
     if (Math.abs(deltaY) > 5) {
       dragOccurredRef.current = true;
     }
-    if (isSheetCollapsedRef.current) {
-      if (deltaY < -60) {
-        setIsSheetCollapsed(false);
-      }
-    } else {
+    
+    const currentState = sheetStateRef.current;
+    if (currentState === 'expanded') {
       if (deltaY > 60) {
-        setIsSheetCollapsed(true);
+        setSheetState('collapsed');
+      }
+    } else if (currentState === 'collapsed') {
+      if (deltaY < -60) {
+        setSheetState('expanded');
+      } else if (deltaY > 60) {
+        setSheetState('minimized');
+      }
+    } else if (currentState === 'minimized') {
+      if (deltaY < -60) {
+        setSheetState('collapsed');
       }
     }
     setDragOffset(0);
@@ -111,7 +122,11 @@ export default function ViewEDriver() {
       e.preventDefault();
       e.stopPropagation();
     } else {
-      setIsSheetCollapsed(prev => !prev);
+      setSheetState(prev => {
+        if (prev === 'minimized') return 'collapsed';
+        if (prev === 'collapsed') return 'expanded';
+        return 'collapsed';
+      });
     }
   };
 
@@ -295,7 +310,7 @@ export default function ViewEDriver() {
   // Dynamic layout offsets for Map centering
   const bottomPaddingValue = isLargeScreen 
     ? 0 
-    : (isSheetCollapsed ? 60 : Math.round(window.innerHeight * 0.40));
+    : (sheetState === 'minimized' ? 24 : (sheetState === 'collapsed' ? 160 : Math.round(window.innerHeight * 0.40)));
   const leftPaddingValue = isLargeScreen ? 380 : 0;
 
   // Render Hospital Picker inside the console cards
@@ -847,11 +862,19 @@ export default function ViewEDriver() {
             padding: '12px 16px 24px 16px',
             zIndex: 1010,
             maxHeight: '55vh',
-            overflowY: isSheetCollapsed ? 'hidden' : 'auto',
+            overflowY: sheetState === 'expanded' ? 'auto' : 'hidden',
             boxShadow: '0 -10px 30px rgba(0,0,0,0.08)',
             transform: isDragging
-              ? (isSheetCollapsed ? `translateY(calc(100% - 56px + ${dragOffset}px))` : `translateY(${dragOffset}px)`)
-              : (isSheetCollapsed ? 'translateY(calc(100% - 56px))' : 'translateY(0)'),
+              ? (sheetState === 'minimized'
+                  ? `translateY(calc(100% - 24px + ${dragOffset}px))`
+                  : sheetState === 'collapsed'
+                  ? `translateY(calc(100% - 160px + ${dragOffset}px))`
+                  : `translateY(${dragOffset}px)`)
+              : (sheetState === 'minimized'
+                  ? 'translateY(calc(100% - 24px))'
+                  : sheetState === 'collapsed'
+                  ? 'translateY(calc(100% - 160px))'
+                  : 'translateY(0)'),
             transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
           }}>
             {/* Drag Handle Wrapper */}
@@ -876,17 +899,17 @@ export default function ViewEDriver() {
               }}
             >
               <div style={{ width: 40, height: 4, background: '#CBD5E0', borderRadius: 2 }} />
-              {isSheetCollapsed && (
+              {sheetState !== 'expanded' && (
                 <div style={{ fontSize: 9, color: '#718096', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginTop: 6 }}>
-                  Swipe Up or Tap to Expand
+                  {sheetState === 'minimized' ? 'Swipe Up or Tap to View Details' : 'Swipe Up to Expand / Down to Hide'}
                 </div>
               )}
             </div>
             
             <div style={{ 
-              opacity: isSheetCollapsed ? 0 : 1, 
+              opacity: sheetState === 'minimized' ? 0 : 1, 
               transition: 'opacity 0.2s', 
-              pointerEvents: isSheetCollapsed ? 'none' : 'auto' 
+              pointerEvents: sheetState === 'minimized' ? 'none' : 'auto' 
             }}>
               {renderConsoleContent()}
             </div>
